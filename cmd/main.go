@@ -29,6 +29,7 @@ func main() {
 	var (
 		timeout        int
 		signed         bool
+		verbose        bool
 		apiKey         string
 		output         string
 		apiKeyRequired = true
@@ -59,6 +60,12 @@ func main() {
 				Required:    apiKeyRequired,
 				Destination: &apiKey,
 			},
+			&cli.BoolFlag{
+				Name:        "verbose",
+				Aliases:     []string{"v"},
+				Usage:       "make verbose output after completition",
+				Destination: &verbose,
+			},
 			&cli.IntFlag{
 				Name:        "timeout",
 				Aliases:     []string{"t"},
@@ -88,6 +95,7 @@ func main() {
 			}
 
 			cfg.Signed = signed
+			cfg.Verbose = verbose
 			cfg.Timeout = time.Duration(timeout) * time.Second
 
 			return nil
