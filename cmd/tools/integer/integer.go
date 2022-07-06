@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/urfave/cli/v2"
@@ -88,7 +89,17 @@ func Integer(cfg *config.AppConfig) cli.ActionFunc {
 			return fmt.Errorf("get result: %v", err)
 		}
 
-		var data integerResponseData
+		var (
+			data    integerResponseData
+			apiInfo = entities.APIInfo{
+				ID:           req.ID,
+				Timestamp:    time.Time(result.Random.Timestamp),
+				RequestsLeft: result.RequestsLeft,
+				BitsUsed:     result.BitsUsed,
+				BitsLeft:     result.BitsLeft,
+			}
+		)
+
 		if err := json.Unmarshal(result.Random.Data, &data); err != nil {
 			return fmt.Errorf("decode result: %w", err)
 		}
@@ -98,7 +109,7 @@ func Integer(cfg *config.AppConfig) cli.ActionFunc {
 			outputData = append(outputData, v)
 		}
 
-		output.GenerateOutput(output.OutputConfig{Separator: "\n"}, outputData, entities.APIInfo{})
+		output.GenerateOutput(cfg.Output, outputData, apiInfo)
 
 		return nil
 	}

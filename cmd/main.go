@@ -30,8 +30,10 @@ func main() {
 		timeout        int
 		signed         bool
 		verbose        bool
+		quite          bool
 		apiKey         string
 		output         string
+		separator      string
 		apiKeyRequired = true
 		cfg            config.AppConfig
 	)
@@ -66,6 +68,12 @@ func main() {
 				Usage:       "make verbose output after completition",
 				Destination: &verbose,
 			},
+			&cli.BoolFlag{
+				Name:        "quite",
+				Aliases:     []string{"q"},
+				Usage:       "suppress all warnings",
+				Destination: &quite,
+			},
 			&cli.IntFlag{
 				Name:        "timeout",
 				Aliases:     []string{"t"},
@@ -73,6 +81,13 @@ func main() {
 				Value:       5,
 				DefaultText: "5 seconds",
 				Destination: &timeout,
+			},
+			&cli.StringFlag{
+				Name:        "separator",
+				Aliases:     []string{"sep"},
+				Usage:       "string to separate output",
+				Value:       " ",
+				Destination: &separator,
 			},
 			&cli.StringFlag{
 				Name:        "file",
@@ -91,12 +106,15 @@ func main() {
 			}
 
 			if output != "" {
-				cfg.OutputFile = &output
+				cfg.Output.Filename = &output
 			}
 
 			cfg.Signed = signed
-			cfg.Verbose = verbose
 			cfg.Timeout = time.Duration(timeout) * time.Second
+
+			cfg.Output.Verbose = verbose
+			cfg.Output.Quite = quite
+			cfg.Output.Separator = separator
 
 			return nil
 		},
