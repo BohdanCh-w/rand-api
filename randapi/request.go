@@ -2,17 +2,29 @@ package randapi
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/google/uuid"
 )
 
-func NewRandomRequest(method string, params json.RawMessage) RandomRequest {
+const jsonRPCVersion = "2.0"
+
+func NewRandomRequest(method string, params interface{}) (RandomRequest, error) {
+	if params == nil {
+		return RandomRequest{}, fmt.Errorf("invalid params")
+	}
+
+	bb, err := json.Marshal(params)
+	if err != nil {
+		return RandomRequest{}, fmt.Errorf("marhsal params: %w", err)
+	}
+
 	return RandomRequest{
 		ID:             uuid.New(),
-		JsonrpcVersion: "2.0",
+		JsonrpcVersion: jsonRPCVersion,
 		Method:         method,
-		Params:         params,
-	}
+		Params:         bb,
+	}, nil
 }
 
 type RandomRequest struct {

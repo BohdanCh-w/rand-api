@@ -1,6 +1,7 @@
 package integer
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/bohdanch-w/rand-api/config"
+	"github.com/bohdanch-w/rand-api/output"
 	"github.com/bohdanch-w/rand-api/randapi"
 )
 
@@ -57,6 +59,9 @@ func (p *integerParams) validate() error {
 
 func Integer(cfg *config.AppConfig) cli.ActionFunc {
 	return func(cCtx *cli.Context) error {
+		ctx, cancel := context.WithTimeout(cCtx.Context, cfg.Timeout)
+		defer cancel()
+
 		params, err := retriveParams(cCtx)
 		if err != nil {
 			return err
@@ -72,14 +77,27 @@ func Integer(cfg *config.AppConfig) cli.ActionFunc {
 			PregenRand:  nil,
 		}
 
-		bb, err := json.Marshal(intReq)
+		req, err := randapi.NewRandomRequest(method, intReq)
 		if err != nil {
-			return fmt.Errorf("marhsal params: %w", err)
+			return fmt.Errorf("create request: %v", err)
 		}
 
-		req := randapi.NewRandomRequest(method, bb)
+		result, err := randapi.RandAPIExecute(ctx, &req)
+		if err != nil {
+			return fmt.Errorf("get result: %v", err)
+		}
 
-		randapi.RandAPIExecute(&req)
+		var data integerResponseData
+		if err := json.Unmarshal(result.Random.Data, &data); err != nil {
+			return fmt.Errorf("decode result: %w", err)
+		}
+
+		outputData := make([]interface{}, 0, len(data))
+		for _, v := range data {
+			outputData = append(outputData, v)
+		}
+
+		output.GenerateOutput(output.OutputConfig{Separator: "\n"}, outputData)
 
 		return nil
 	}
@@ -94,3 +112,5 @@ type integerRequest struct {
 	Base        int8    `json:"base"`
 	PregenRand  *string `json:"pregeneratedRandomization"`
 }
+
+type integerResponseData []int
