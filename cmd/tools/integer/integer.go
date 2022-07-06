@@ -9,6 +9,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/bohdanch-w/rand-api/config"
+	"github.com/bohdanch-w/rand-api/entities"
 	"github.com/bohdanch-w/rand-api/output"
 	"github.com/bohdanch-w/rand-api/randapi"
 )
@@ -97,7 +98,7 @@ func Integer(cfg *config.AppConfig) cli.ActionFunc {
 			outputData = append(outputData, v)
 		}
 
-		output.GenerateOutput(output.OutputConfig{Separator: "\n"}, outputData)
+		output.GenerateOutput(output.OutputConfig{Separator: "\n"}, outputData, entities.APIInfo{})
 
 		return nil
 	}

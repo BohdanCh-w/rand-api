@@ -7,13 +7,18 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/bohdanch-w/rand-api/entities"
 )
 
-const randAPIPath = "https://api.random.org/json-rpc/4/invoke"
+const (
+	randAPIPath    = "https://api.random.org/json-rpc/4/invoke"
+	jsonRPCVersion = "2.0"
+)
 
-func RandAPIExecute(ctx context.Context, randReq *RandomRequest) (RandResponseResult, error) {
+func RandAPIExecute(ctx context.Context, randReq *entities.RandomRequest) (entities.RandResponseResult, error) {
 	var (
-		result RandResponseResult
+		result entities.RandResponseResult
 		buf    = bytes.NewBuffer(nil)
 		enc    = json.NewEncoder(buf)
 	)
@@ -48,7 +53,7 @@ func RandAPIExecute(ctx context.Context, randReq *RandomRequest) (RandResponseRe
 		return result, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	var randResp RandResponse
+	var randResp entities.RandResponse
 
 	if err := json.Unmarshal(data, &randResp); err != nil {
 		return result, fmt.Errorf("decode response: %w", err)

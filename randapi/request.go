@@ -4,32 +4,24 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/bohdanch-w/rand-api/entities"
 	"github.com/google/uuid"
 )
 
-const jsonRPCVersion = "2.0"
-
-func NewRandomRequest(method string, params interface{}) (RandomRequest, error) {
+func NewRandomRequest(method string, params interface{}) (entities.RandomRequest, error) {
 	if params == nil {
-		return RandomRequest{}, fmt.Errorf("invalid params")
+		return entities.RandomRequest{}, fmt.Errorf("invalid params")
 	}
 
 	bb, err := json.Marshal(params)
 	if err != nil {
-		return RandomRequest{}, fmt.Errorf("marhsal params: %w", err)
+		return entities.RandomRequest{}, fmt.Errorf("marhsal params: %w", err)
 	}
 
-	return RandomRequest{
+	return entities.RandomRequest{
 		ID:             uuid.New(),
 		JsonrpcVersion: jsonRPCVersion,
 		Method:         method,
 		Params:         bb,
 	}, nil
-}
-
-type RandomRequest struct {
-	ID             uuid.UUID       `json:"id"`
-	JsonrpcVersion string          `json:"jsonrpc"`
-	Method         string          `json:"method"`
-	Params         json.RawMessage `json:"params"`
 }

@@ -1,4 +1,4 @@
-package randapi
+package entities
 
 import (
 	"encoding/json"
