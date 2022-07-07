@@ -95,7 +95,12 @@ func Coin(cfg *config.AppConfig) cli.ActionFunc {
 
 		outputData := make([]interface{}, 0, len(data))
 		for _, v := range data {
-			outputData = append(outputData, coinSide(v, mapper))
+			side, err := coinSide(v, mapper)
+			if err != nil {
+				return fmt.Errorf("decode random data: %w", err)
+			}
+
+			outputData = append(outputData, side)
 		}
 
 		output.GenerateOutput(cfg.Output, outputData, apiInfo)
@@ -120,10 +125,10 @@ func coinMappers(format string) (coinMapper, error) {
 	return mapper, nil
 }
 
-func coinSide(v int, mapper coinMapper) interface{} {
+func coinSide(v int, mapper coinMapper) (interface{}, error) {
 	if v < 0 || v > 1 {
-		return "invalid coin value"
+		return nil, fmt.Errorf("invalid coin value %d", v)
 	}
 
-	return mapper[v]
+	return mapper[v], nil
 }
