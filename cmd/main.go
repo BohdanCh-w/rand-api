@@ -244,7 +244,7 @@ func main() {
 						Value:   1,
 					},
 					&cli.StringFlag{
-						Name:        "characters",
+						Name:        "charset",
 						Usage:       "characters to be used in generation. Max len - 128",
 						Aliases:     []string{"c"},
 						Value:       characterRange,
