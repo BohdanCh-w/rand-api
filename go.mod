@@ -3,7 +3,7 @@ module github.com/bohdanch-w/rand-api
 go 1.18
 
 require (
-	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
+	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/google/uuid v1.3.0
 	github.com/urfave/cli/v2 v2.10.3
 )

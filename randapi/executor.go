@@ -59,6 +59,15 @@ func RandAPIExecute(ctx context.Context, randReq *entities.RandomRequest) (entit
 		return result, fmt.Errorf("decode response: %w", err)
 	}
 
+	if randResp.Result.Random.Data == nil {
+		msg, err := handleErrorResponse(data)
+		if err != nil {
+			return result, fmt.Errorf("decode error response: %w", err)
+		}
+
+		return result, fmt.Errorf("random.org: request failed: %w", msg)
+	}
+
 	if randResp.ID != randReq.ID {
 		return result, fmt.Errorf("response id mismatch request: %s != %s", randResp.ID.String(), randReq.ID.String())
 	}

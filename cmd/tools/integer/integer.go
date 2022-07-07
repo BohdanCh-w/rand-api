@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	validation "github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/urfave/cli/v2"
 
 	"github.com/bohdanch-w/rand-api/config"
@@ -28,19 +28,13 @@ type integerParams struct {
 	Unique bool
 }
 
-func retriveParams(ctx *cli.Context) (integerParams, error) {
-	p := integerParams{
-		From:   ctx.Int64("from"),
-		To:     ctx.Int64("to"),
-		Number: ctx.Int("number"),
-		Unique: ctx.Bool("unique"),
-	}
+func (p *integerParams) retriveParams(ctx *cli.Context) error {
+	p.From = ctx.Int64("from")
+	p.To = ctx.Int64("to")
+	p.Number = ctx.Int("number")
+	p.Unique = ctx.Bool("unique")
 
-	if err := p.validate(); err != nil {
-		return integerParams{}, fmt.Errorf("interger: %w", err)
-	}
-
-	return p, nil
+	return p.validate()
 }
 
 func (p *integerParams) validate() error {
@@ -52,7 +46,11 @@ func (p *integerParams) validate() error {
 		return fmt.Errorf("`to` param is invalid: %w", err)
 	}
 
-	if err := validation.Validate(p.Number, validation.Min(1), validation.Max(rangeMaxMin)); err != nil {
+	if err := validation.Validate(
+		p.Number, validation.Min(1),
+		validation.Max(numberMax),
+		validation.Required.Error("must be no less than 1"),
+	); err != nil {
 		return fmt.Errorf("`number` param is invalid: %w", err)
 	}
 
@@ -64,8 +62,9 @@ func Integer(cfg *config.AppConfig) cli.ActionFunc {
 		ctx, cancel := context.WithTimeout(cCtx.Context, cfg.Timeout)
 		defer cancel()
 
-		params, err := retriveParams(cCtx)
-		if err != nil {
+		var params integerParams
+
+		if err := params.retriveParams(cCtx); err != nil {
 			return err
 		}
 
