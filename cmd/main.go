@@ -290,7 +290,6 @@ func main() {
 					&cli.BoolFlag{
 						Name:        "hex",
 						Usage:       "if true generated data has hex format, base64 otherwise",
-						Aliases:     []string{"h"},
 						DefaultText: "base64",
 					},
 					&cli.IntFlag{
