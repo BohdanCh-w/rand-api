@@ -9,6 +9,8 @@ import (
 	"github.com/bohdanch-w/rand-api/entities"
 )
 
+const timeFormat = "15:04:05 02-01-2006"
+
 func GenerateOutput(cfg config.Output, data []interface{}, apiInfo entities.APIInfo) error {
 	generateAPIInfoOutput(cfg, apiInfo)
 
@@ -46,8 +48,6 @@ func generateAPIInfoOutput(cfg config.Output, apiInfo entities.APIInfo) {
 	if !cfg.Verbose {
 		return
 	}
-
-	const timeFormat = "15:04:05 2006-01-02"
 
 	fmt.Printf("request %s finished at %s\n", apiInfo.ID.String(), apiInfo.Timestamp.Format(timeFormat))
 	fmt.Printf("requests left: %d\n", apiInfo.RequestsLeft)
