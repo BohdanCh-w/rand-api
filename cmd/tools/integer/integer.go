@@ -47,9 +47,10 @@ func (p *integerParams) validate() error {
 	}
 
 	if err := validation.Validate(
-		p.Number, validation.Min(1),
-		validation.Max(numberMax),
+		p.Number,
 		validation.Required.Error("must be no less than 1"),
+		validation.Min(1),
+		validation.Max(numberMax),
 	); err != nil {
 		return fmt.Errorf("`number` param is invalid: %w", err)
 	}
