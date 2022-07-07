@@ -54,6 +54,14 @@ func (p *integerParams) validate() error {
 		return fmt.Errorf("`number` param is invalid: %w", err)
 	}
 
+	if p.From >= p.To {
+		return fmt.Errorf("`from` parameter must be less than `to`")
+	}
+
+	if (p.To-p.From) < int64(p.Number) && p.Unique {
+		return fmt.Errorf("`number` of requested values is bigger than possible in range %d - %d", p.From, p.To)
+	}
+
 	return nil
 }
 
@@ -73,7 +81,7 @@ func Integer(cfg *config.AppConfig) cli.ActionFunc {
 			Number:      params.Number,
 			Min:         params.From,
 			Max:         params.To,
-			Replacement: params.Unique,
+			Replacement: !params.Unique,
 			Base:        10,
 			PregenRand:  nil,
 		}
