@@ -55,11 +55,11 @@ func (p *integerParams) validate() error {
 	}
 
 	if p.From >= p.To {
-		return fmt.Errorf("`from` parameter must be less than `to`")
+		return fmt.Errorf("`from` param must be less than `to`")
 	}
 
 	if (p.To-p.From) < int64(p.Number) && p.Unique {
-		return fmt.Errorf("`number` of requested values is bigger than possible in range %d - %d", p.From, p.To)
+		return fmt.Errorf("`number` of unique requested values is greater than possible in range %d - %d", p.From, p.To)
 	}
 
 	return nil
@@ -88,12 +88,12 @@ func Integer(cfg *config.AppConfig) cli.ActionFunc {
 
 		req, err := randapi.NewRandomRequest(method, intReq)
 		if err != nil {
-			return fmt.Errorf("create request: %v", err)
+			return fmt.Errorf("create request: %w", err)
 		}
 
 		result, err := randapi.RandAPIExecute(ctx, &req)
 		if err != nil {
-			return fmt.Errorf("get result: %v", err)
+			return fmt.Errorf("get result: %w", err)
 		}
 
 		var (

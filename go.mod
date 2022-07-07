@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/google/uuid v1.3.0
+	github.com/shopspring/decimal v1.3.1
 	github.com/urfave/cli/v2 v2.10.3
 )
 

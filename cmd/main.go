@@ -174,9 +174,17 @@ func main() {
 				Usage:   "generate random decimal value in range [0, 1]",
 				Aliases: []string{"dec"},
 				Flags: []cli.Flag{
+					&cli.Float64Flag{
+						Name:    "base",
+						Usage:   "returned value will be in range [0, base]",
+						Aliases: []string{"b"},
+						Value:   1,
+					},
 					&cli.IntFlag{
-						Name:  "places",
-						Usage: "number of decimal places to use [1, 14]",
+						Name:    "places",
+						Usage:   "number of decimal places to use [1, 14]",
+						Aliases: []string{"p"},
+						Value:   6,
 					},
 					&cli.IntFlag{
 						Name:    "number",
