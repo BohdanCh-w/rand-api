@@ -160,6 +160,12 @@ func main() {
 						Aliases: []string{"N"},
 						Value:   1,
 					},
+					&cli.StringFlag{
+						Name:    "format",
+						Usage:   "format printet result. One of 'eng' 'ukr' 'number'",
+						Aliases: []string{"f"},
+						Value:   "eng",
+					},
 				},
 				Action: integer.Coin(&cfg),
 			},
