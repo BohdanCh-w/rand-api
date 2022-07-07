@@ -31,6 +31,8 @@ func GenerateOutput(cfg config.Output, data []interface{}, apiInfo entities.APII
 		}
 	}
 
+	fmt.Println()
+
 	return nil
 }
 
