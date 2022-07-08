@@ -46,7 +46,7 @@ func main() {
 	}
 
 	app := &cli.App{
-		Name:  "rand",
+		Name:  "randapi",
 		Usage: "cli program to retrieve values from random.org",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
