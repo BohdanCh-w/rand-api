@@ -50,3 +50,5 @@ To get options for specific command use `randapi [command] -h`
 - Add version command
 - Add integer sequenses command
 - Pass number value to command as argument (not option). P.S. size for BLOB
+- Add Signed requests
+- Add Pregenerated requests
