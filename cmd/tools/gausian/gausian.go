@@ -16,12 +16,53 @@ import (
 )
 
 const (
+	CommandName     = "gausian"
+	meanParam       = "mean"
+	deviationParam  = "deviation"
+	signDigitsParam = "signdig"
+	numberParam     = "number"
+
 	method               = "generateGaussians"
 	rangeMaxMin          = 1_000_000
 	minSignificantDigits = 2
 	maxSignificantDigits = 14
 	numberMax            = 10_000
 )
+
+func NewGausianCommand(cfg *config.AppConfig) *cli.Command {
+	return &cli.Command{
+		Name:    CommandName,
+		Aliases: []string{"gaus"},
+		Usage:   "generate random value with Gausian distribution",
+		Flags: []cli.Flag{
+			&cli.Float64Flag{
+				Name:    meanParam,
+				Usage:   "mean value of distribution         [-1000000, 1000000]",
+				Aliases: []string{"m"},
+				Value:   0,
+			},
+			&cli.Float64Flag{
+				Name:    deviationParam,
+				Usage:   "standart deviation of distribution [-1000000, 1000000]",
+				Aliases: []string{"d"},
+				Value:   1,
+			},
+			&cli.IntFlag{
+				Name:    signDigitsParam,
+				Usage:   "number of significant digits [2, 14]",
+				Aliases: []string{"s"},
+				Value:   6,
+			},
+			&cli.IntFlag{
+				Name:    numberParam,
+				Usage:   "number of values returned    [1, 10000]",
+				Aliases: []string{"N"},
+				Value:   1,
+			},
+		},
+		Action: gausian(cfg),
+	}
+}
 
 type gausianParams struct {
 	Mean              float64
@@ -31,10 +72,10 @@ type gausianParams struct {
 }
 
 func (p *gausianParams) retriveParams(ctx *cli.Context) error {
-	p.Mean = ctx.Float64("mean")
-	p.Deviation = ctx.Float64("deviation")
-	p.SignificantDigits = ctx.Int("signdig")
-	p.Number = ctx.Int("number")
+	p.Mean = ctx.Float64(meanParam)
+	p.Deviation = ctx.Float64(deviationParam)
+	p.SignificantDigits = ctx.Int(signDigitsParam)
+	p.Number = ctx.Int(numberParam)
 
 	return p.validate()
 }
@@ -53,7 +94,7 @@ func (p *gausianParams) validate() error {
 		validation.Min(float64(-rangeMaxMin)),
 		validation.Max(float64(rangeMaxMin)),
 	); err != nil {
-		return fmt.Errorf("`deviation` param is invalid: %w", err) // TODO: check negative
+		return fmt.Errorf("`deviation` param is invalid: %w", err)
 	}
 
 	if err := validation.Validate(
@@ -76,7 +117,7 @@ func (p *gausianParams) validate() error {
 	return nil
 }
 
-func Gausian(cfg *config.AppConfig) cli.ActionFunc {
+func gausian(cfg *config.AppConfig) cli.ActionFunc {
 	return func(cCtx *cli.Context) error {
 		ctx, cancel := context.WithTimeout(cCtx.Context, cfg.Timeout)
 		defer cancel()

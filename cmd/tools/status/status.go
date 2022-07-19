@@ -10,7 +10,16 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func Status(cfg *config.AppConfig) cli.ActionFunc {
+func NewStatusCommand(cfg *config.AppConfig) *cli.Command {
+	return &cli.Command{
+		Name:    "status",
+		Usage:   "get current apiKey usage",
+		Aliases: []string{"st"},
+		Action:  status(cfg),
+	}
+}
+
+func status(cfg *config.AppConfig) cli.ActionFunc {
 	return func(cCtx *cli.Context) error {
 		ctx, cancel := context.WithTimeout(cCtx.Context, cfg.Timeout)
 		defer cancel()

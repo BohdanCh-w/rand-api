@@ -21,6 +21,22 @@ const (
 	numberMax = 10_000
 )
 
+func NewUUIDCommand(cfg *config.AppConfig) *cli.Command {
+	return &cli.Command{
+		Name:  "uuid",
+		Usage: "generate random uuid V4",
+		Flags: []cli.Flag{
+			&cli.IntFlag{
+				Name:    "number",
+				Usage:   "number of values returned [1, 10000]",
+				Aliases: []string{"N"},
+				Value:   1,
+			},
+		},
+		Action: randUUID(cfg),
+	}
+}
+
 type uuidParams struct {
 	Number int
 }
@@ -44,7 +60,7 @@ func (p *uuidParams) validate() error {
 	return nil
 }
 
-func UUID(cfg *config.AppConfig) cli.ActionFunc {
+func randUUID(cfg *config.AppConfig) cli.ActionFunc {
 	return func(cCtx *cli.Context) error {
 		ctx, cancel := context.WithTimeout(cCtx.Context, cfg.Timeout)
 		defer cancel()

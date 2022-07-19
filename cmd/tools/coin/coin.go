@@ -1,4 +1,4 @@
-package integer
+package coin
 
 import (
 	"context"
@@ -14,20 +14,56 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+const (
+	coinCommandName = "coin"
+	formatParam     = "format"
+	numberParam     = "number"
+
+	method      = "generateIntegers"
+	rangeMaxMin = 1_000_000_000
+	numberMax   = 10_000
+
+	formatEng = "eng"
+	formatUkr = "ukr"
+	formatNum = "num"
+)
+
+func NewCoinCommand(cfg *config.AppConfig) *cli.Command {
+	return &cli.Command{
+		Name:  coinCommandName,
+		Usage: "generate random coinflip result (two values possible)",
+		Flags: []cli.Flag{
+			&cli.IntFlag{
+				Name:    numberParam,
+				Usage:   "number of values returned [-1000, 1000]",
+				Aliases: []string{"N"},
+				Value:   1,
+			},
+			&cli.StringFlag{
+				Name:    formatParam,
+				Usage:   "format printet result. One of 'eng' 'ukr' 'num'",
+				Aliases: []string{"f"},
+				Value:   "eng",
+			},
+		},
+		Action: coin(cfg),
+	}
+}
+
 type coinParams struct {
 	Format string
 	Number int
 }
 
 func (p *coinParams) retriveParams(ctx *cli.Context) error {
-	p.Format = ctx.String("format")
-	p.Number = ctx.Int("number")
+	p.Format = ctx.String(formatParam)
+	p.Number = ctx.Int(numberParam)
 
 	return p.validate()
 }
 
 func (p *coinParams) validate() error {
-	if err := validation.Validate(p.Format, validation.In("ukr", "eng", "number")); err != nil {
+	if err := validation.Validate(p.Format, validation.In(formatUkr, formatEng, formatNum)); err != nil {
 		return fmt.Errorf("`format` param is invalid: %w", err)
 	}
 
@@ -42,7 +78,7 @@ func (p *coinParams) validate() error {
 	return nil
 }
 
-func Coin(cfg *config.AppConfig) cli.ActionFunc {
+func coin(cfg *config.AppConfig) cli.ActionFunc {
 	return func(cCtx *cli.Context) error {
 		ctx, cancel := context.WithTimeout(cCtx.Context, cfg.Timeout)
 		defer cancel()
@@ -53,7 +89,7 @@ func Coin(cfg *config.AppConfig) cli.ActionFunc {
 			return err
 		}
 
-		coinReq := integerRequest{
+		coinReq := coinRequest{
 			ApiKey:      cfg.APIKey,
 			Number:      params.Number,
 			Min:         0,
@@ -74,7 +110,7 @@ func Coin(cfg *config.AppConfig) cli.ActionFunc {
 		}
 
 		var (
-			data    integerResponseData
+			data    coinResponseData
 			apiInfo = entities.APIInfo{
 				ID:           req.ID,
 				Timestamp:    time.Time(result.Random.Timestamp),
@@ -113,9 +149,9 @@ type coinMapper []interface{}
 
 func coinMappers(format string) (coinMapper, error) {
 	mapper, ok := map[string]coinMapper{
-		"eng":    {"heads", "tails"},
-		"ukr":    {"решка", "орел"},
-		"number": {0, 1},
+		formatEng: {"heads", "tails"},
+		formatUkr: {"решка", "орел"},
+		formatNum: {0, 1},
 	}[format]
 
 	if !ok {
@@ -132,3 +168,15 @@ func coinSide(v int, mapper coinMapper) (interface{}, error) {
 
 	return mapper[v], nil
 }
+
+type coinRequest struct {
+	ApiKey      string  `json:"apiKey"`
+	Number      int     `json:"n"`
+	Min         int64   `json:"min"`
+	Max         int64   `json:"max"`
+	Replacement bool    `json:"replacement"`
+	Base        int8    `json:"base"`
+	PregenRand  *string `json:"pregeneratedRandomization"`
+}
+
+type coinResponseData []int

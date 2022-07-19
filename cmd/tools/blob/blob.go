@@ -17,6 +17,11 @@ import (
 )
 
 const (
+	CommandName = "blob"
+	sizeParam   = "size"
+	hexParam    = "hex"
+	numberParam = "number"
+
 	method    = "generateBlobs"
 	sizeMax   = 1_048_576
 	numberMax = 10_000
@@ -25,6 +30,33 @@ const (
 	base64Format = "base64"
 )
 
+func NewBlobCommand(cfg *config.AppConfig) *cli.Command {
+	return &cli.Command{
+		Name:  CommandName,
+		Usage: "generate random Binary Large OBject. Total size must not exceed 1,048,576 bits (128 Kib)",
+		Flags: []cli.Flag{
+			&cli.Int64Flag{
+				Name:    sizeParam,
+				Usage:   "size of blobs in bits [1, 1048576] must be divisible by 8",
+				Aliases: []string{"s"},
+				Value:   64,
+			},
+			&cli.BoolFlag{
+				Name:        hexParam,
+				Usage:       "if true generated data has hex format, base64 otherwise",
+				DefaultText: base64Format,
+			},
+			&cli.IntFlag{
+				Name:    numberParam,
+				Usage:   "number of values returned [1, 10000]",
+				Aliases: []string{"N"},
+				Value:   1,
+			},
+		},
+		Action: blob(cfg),
+	}
+}
+
 type blobParams struct {
 	Size   int64
 	Number int
@@ -32,9 +64,9 @@ type blobParams struct {
 }
 
 func (p *blobParams) retriveParams(ctx *cli.Context) error {
-	p.Size = ctx.Int64("size")
-	p.Number = ctx.Int("number")
-	p.Hex = ctx.Bool("hex")
+	p.Size = ctx.Int64(sizeParam)
+	p.Number = ctx.Int(numberParam)
+	p.Hex = ctx.Bool(hexParam)
 
 	return p.validate()
 }
@@ -69,7 +101,7 @@ func (p *blobParams) validate() error {
 	return nil
 }
 
-func BLOB(cfg *config.AppConfig) cli.ActionFunc {
+func blob(cfg *config.AppConfig) cli.ActionFunc {
 	return func(cCtx *cli.Context) error {
 		ctx, cancel := context.WithTimeout(cCtx.Context, cfg.Timeout)
 		defer cancel()

@@ -17,10 +17,50 @@ import (
 )
 
 const (
+	CommandName = "decimal"
+	baseParam   = "base"
+	placesParam = "places"
+	numberParam = "number"
+	uniqueParam = "unique"
+
 	method           = "generateDecimalFractions"
 	numberMax        = 10_000
 	decimalPlacesMax = 14
 )
+
+func NewDecimalCommand(cfg *config.AppConfig) *cli.Command {
+	return &cli.Command{
+		Name:    CommandName,
+		Usage:   "generate random decimal value in range [0, 1]",
+		Aliases: []string{"dec"},
+		Flags: []cli.Flag{
+			&cli.Float64Flag{
+				Name:    baseParam,
+				Usage:   "returned value will be in range [0, base]",
+				Aliases: []string{"b"},
+				Value:   1,
+			},
+			&cli.IntFlag{
+				Name:    placesParam,
+				Usage:   "number of decimal places to use [1, 14]",
+				Aliases: []string{"p"},
+				Value:   6,
+			},
+			&cli.IntFlag{
+				Name:    numberParam,
+				Usage:   "number of values returned     [1, 10000]",
+				Aliases: []string{"N"},
+				Value:   1,
+			},
+			&cli.BoolFlag{
+				Name:    uniqueParam,
+				Usage:   "specifies whether values must be unique. Returns error if N < (to - from)",
+				Aliases: []string{"u"},
+			},
+		},
+		Action: randDecimal(cfg),
+	}
+}
 
 type decimalParams struct {
 	Base   float64
@@ -30,10 +70,10 @@ type decimalParams struct {
 }
 
 func (p *decimalParams) retrieveParams(ctx *cli.Context) error {
-	p.Base = ctx.Float64("base")
-	p.Places = ctx.Int("places")
-	p.Number = ctx.Int("number")
-	p.Unique = ctx.Bool("unique")
+	p.Base = ctx.Float64(baseParam)
+	p.Places = ctx.Int(placesParam)
+	p.Number = ctx.Int(numberParam)
+	p.Unique = ctx.Bool(uniqueParam)
 
 	return p.validate()
 }
@@ -66,7 +106,7 @@ func (p *decimalParams) validate() error {
 	return nil
 }
 
-func Decimal(cfg *config.AppConfig) cli.ActionFunc {
+func randDecimal(cfg *config.AppConfig) cli.ActionFunc {
 	return func(cCtx *cli.Context) error {
 		ctx, cancel := context.WithTimeout(cCtx.Context, cfg.Timeout)
 		defer cancel()

@@ -16,10 +16,50 @@ import (
 )
 
 const (
+	commandName = "integer"
+	fromParam   = "from"
+	toParam     = "to"
+	numberParam = "number"
+	uniqueParam = "unique"
+
 	method      = "generateIntegers"
 	rangeMaxMin = 1_000_000_000
 	numberMax   = 10_000
 )
+
+func NewIntegerCommand(cfg *config.AppConfig) *cli.Command {
+	return &cli.Command{
+		Name:    commandName,
+		Aliases: []string{"int"},
+		Usage:   "generate random integer in range (including)",
+		Flags: []cli.Flag{
+			&cli.Int64Flag{
+				Name:    fromParam,
+				Usage:   "bottom limit of random number [-1e9, 1e9]",
+				Aliases: []string{"f"},
+				Value:   1,
+			},
+			&cli.Int64Flag{
+				Name:    toParam,
+				Usage:   "upper limit of random number  [-1e9, 1e9]",
+				Aliases: []string{"t"},
+				Value:   100,
+			},
+			&cli.IntFlag{
+				Name:    numberParam,
+				Usage:   "number of values returned     [1, 10000]",
+				Aliases: []string{"N"},
+				Value:   1,
+			},
+			&cli.BoolFlag{
+				Name:    uniqueParam,
+				Usage:   "specifies whether values must be unique. Returns error if N < (to - from)",
+				Aliases: []string{"u"},
+			},
+		},
+		Action: integer(cfg),
+	}
+}
 
 type integerParams struct {
 	From   int64
@@ -29,10 +69,10 @@ type integerParams struct {
 }
 
 func (p *integerParams) retriveParams(ctx *cli.Context) error {
-	p.From = ctx.Int64("from")
-	p.To = ctx.Int64("to")
-	p.Number = ctx.Int("number")
-	p.Unique = ctx.Bool("unique")
+	p.From = ctx.Int64(fromParam)
+	p.To = ctx.Int64(toParam)
+	p.Number = ctx.Int(numberParam)
+	p.Unique = ctx.Bool(uniqueParam)
 
 	return p.validate()
 }
@@ -66,7 +106,7 @@ func (p *integerParams) validate() error {
 	return nil
 }
 
-func Integer(cfg *config.AppConfig) cli.ActionFunc {
+func integer(cfg *config.AppConfig) cli.ActionFunc {
 	return func(cCtx *cli.Context) error {
 		ctx, cancel := context.WithTimeout(cCtx.Context, cfg.Timeout)
 		defer cancel()
