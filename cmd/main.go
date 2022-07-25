@@ -3,7 +3,9 @@ package main
 import (
 	"embed"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -16,6 +18,8 @@ import (
 	randstr "github.com/bohdanch-w/rand-api/cmd/tools/string"
 	"github.com/bohdanch-w/rand-api/cmd/tools/uuid"
 	"github.com/bohdanch-w/rand-api/config"
+	"github.com/bohdanch-w/rand-api/output"
+	"github.com/bohdanch-w/rand-api/randapi"
 
 	guuid "github.com/google/uuid"
 	"github.com/urfave/cli/v2"
@@ -38,7 +42,7 @@ const (
 	defaultSeparator = " "
 )
 
-func retriveParamsFunc(cfg *config.AppConfig) cli.BeforeFunc {
+func retriveParamsFunc(cfg *config.AppConfig, f **os.File) cli.BeforeFunc {
 	return func(c *cli.Context) error {
 		if apiKey := c.String(apikeyParam); len(apiKey) != 0 {
 			if _, err := guuid.Parse(apiKey); err != nil {
@@ -48,15 +52,33 @@ func retriveParamsFunc(cfg *config.AppConfig) cli.BeforeFunc {
 			cfg.APIKey = apiKey
 		}
 
-		if output := c.String(outputParam); output != "" {
-			cfg.Output.Filename = &output
+		cfg.Timeout = c.Duration(timeoutParam)
+
+		var (
+			w   io.Writer = os.Stdout
+			err error
+		)
+
+		if destination := c.String(outputParam); destination != "" {
+			*f, err = os.Create(destination)
+			if err != nil {
+				return fmt.Errorf("create output file: %w", err)
+			}
+
+			w = *f
 		}
 
-		cfg.Signed = c.Bool(signedParam)
-		cfg.Timeout = c.Duration(timeoutParam)
-		cfg.Output.Verbose = c.Bool(verboseParam)
-		cfg.Output.Quite = c.Bool(quietParam)
-		cfg.Output.Separator = c.String(separatorParam)
+		cfg.OutputProcessor = output.NewOutputProcessor(
+			c.Bool(verboseParam),
+			c.Bool(quietParam),
+			c.String(separatorParam),
+			w,
+		)
+
+		cfg.RandRetriever = randapi.NewRandomOrgRetriever(
+			http.DefaultClient,
+			c.Bool(signedParam),
+		)
 
 		return nil
 	}
@@ -67,6 +89,7 @@ func main() {
 		apiKeyRequired = true
 		cfg            config.AppConfig
 		data, _        = apiKeyResource.ReadFile("resources/api-key")
+		f              *os.File
 	)
 
 	if len(data) > 0 {
@@ -117,7 +140,7 @@ func main() {
 				Usage:   "save output to specied file",
 			},
 		},
-		Before: retriveParamsFunc(&cfg),
+		Before: retriveParamsFunc(&cfg, &f),
 		Commands: []*cli.Command{
 			integer.NewIntegerCommand(&cfg),
 			coin.NewCoinCommand(&cfg),

@@ -9,8 +9,6 @@ import (
 
 	"github.com/bohdanch-w/rand-api/config"
 	"github.com/bohdanch-w/rand-api/entities"
-	"github.com/bohdanch-w/rand-api/output"
-	"github.com/bohdanch-w/rand-api/randapi"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/shopspring/decimal"
 	"github.com/urfave/cli/v2"
@@ -125,12 +123,12 @@ func randDecimal(cfg *config.AppConfig) cli.ActionFunc {
 			PregenRand:    nil,
 		}
 
-		req, err := randapi.NewRandomRequest(method, decReq)
+		req, err := cfg.RandRetriever.NewRequest(method, decReq)
 		if err != nil {
 			return fmt.Errorf("create request: %w", err)
 		}
 
-		result, err := randapi.RandAPIExecute(ctx, &req)
+		result, err := cfg.RandRetriever.ExecuteRequest(ctx, &req)
 		if err != nil {
 			return fmt.Errorf("get response: %w", err)
 		}
@@ -158,7 +156,7 @@ func randDecimal(cfg *config.AppConfig) cli.ActionFunc {
 			outputData = append(outputData, value)
 		}
 
-		output.GenerateOutput(cfg.Output, outputData, apiInfo)
+		cfg.OutputProcessor.GenerateRandOutput(outputData, apiInfo)
 
 		return nil
 	}

@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/bohdanch-w/rand-api/entities"
+	"github.com/bohdanch-w/rand-api/services"
 )
 
 const (
@@ -16,7 +17,26 @@ const (
 	jsonRPCVersion = "2.0"
 )
 
-func RandAPIExecute(ctx context.Context, randReq *entities.RandomRequest) (entities.RandResponseResult, error) {
+var _ services.RandRetiever = (*RandomOrgRetriever)(nil)
+
+func NewRandomOrgRetriever(client *http.Client, signed bool) *RandomOrgRetriever {
+	return &RandomOrgRetriever{
+		apiPath:        randAPIPath,
+		jsonRPCVersion: jsonRPCVersion,
+		client:         client,
+	}
+}
+
+type RandomOrgRetriever struct {
+	apiPath        string
+	jsonRPCVersion string
+	client         *http.Client
+}
+
+func (svc *RandomOrgRetriever) ExecuteRequest(
+	ctx context.Context,
+	randReq *entities.RandomRequest,
+) (entities.RandResponseResult, error) {
 	var (
 		result entities.RandResponseResult
 		buf    = bytes.NewBuffer(nil)

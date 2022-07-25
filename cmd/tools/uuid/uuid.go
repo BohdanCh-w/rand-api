@@ -8,8 +8,6 @@ import (
 
 	"github.com/bohdanch-w/rand-api/config"
 	"github.com/bohdanch-w/rand-api/entities"
-	"github.com/bohdanch-w/rand-api/output"
-	"github.com/bohdanch-w/rand-api/randapi"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/google/uuid"
@@ -77,12 +75,12 @@ func randUUID(cfg *config.AppConfig) cli.ActionFunc {
 			PregenRand: nil,
 		}
 
-		req, err := randapi.NewRandomRequest(method, uuidReq)
+		req, err := cfg.RandRetriever.NewRequest(method, uuidReq)
 		if err != nil {
 			return fmt.Errorf("create request: %w", err)
 		}
 
-		result, err := randapi.RandAPIExecute(ctx, &req)
+		result, err := cfg.RandRetriever.ExecuteRequest(ctx, &req)
 		if err != nil {
 			return fmt.Errorf("get result: %w", err)
 		}
@@ -107,7 +105,7 @@ func randUUID(cfg *config.AppConfig) cli.ActionFunc {
 			outputData = append(outputData, v)
 		}
 
-		output.GenerateOutput(cfg.Output, outputData, apiInfo)
+		cfg.OutputProcessor.GenerateRandOutput(outputData, apiInfo)
 
 		return nil
 	}

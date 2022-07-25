@@ -1,17 +1,15 @@
 package config
 
-import "time"
+import (
+	"time"
+
+	"github.com/bohdanch-w/rand-api/services"
+)
 
 type AppConfig struct {
 	APIKey  string
-	Signed  bool
 	Timeout time.Duration
-	Output  Output
-}
 
-type Output struct {
-	Filename  *string
-	Separator string
-	Verbose   bool
-	Quite     bool
+	RandRetriever   services.RandRetiever
+	OutputProcessor services.OutputProcessor
 }

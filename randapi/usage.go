@@ -13,7 +13,7 @@ import (
 	"github.com/bohdanch-w/rand-api/entities"
 )
 
-func RandAPIUsageExecute(ctx context.Context, apiKey string) (entities.UsageStatus, error) {
+func (svc *RandomOrgRetriever) GetUsage(ctx context.Context, apiKey string) (entities.UsageStatus, error) {
 	var (
 		usage entities.UsageStatus
 		buf   = bytes.NewBuffer(nil)
@@ -22,7 +22,7 @@ func RandAPIUsageExecute(ctx context.Context, apiKey string) (entities.UsageStat
 
 	enc.SetEscapeHTML(false)
 
-	randReq, err := NewRandomRequest("getUsage", usageStatusParams{ApiKey: apiKey})
+	randReq, err := svc.NewRequest("getUsage", usageStatusParams{ApiKey: apiKey})
 	if err != nil {
 		return usage, fmt.Errorf("create request: %v", err)
 	}

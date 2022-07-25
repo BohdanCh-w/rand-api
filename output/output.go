@@ -3,49 +3,61 @@ package output
 import (
 	"fmt"
 	"io"
-	"os"
+	"strings"
 
-	"github.com/bohdanch-w/rand-api/config"
 	"github.com/bohdanch-w/rand-api/entities"
+	"github.com/bohdanch-w/rand-api/services"
 )
 
 const timeFormat = "15:04:05 02-01-2006"
 
-func GenerateOutput(cfg config.Output, data []interface{}, apiInfo entities.APIInfo) error {
-	generateAPIInfoOutput(cfg, apiInfo)
+var _ services.OutputProcessor = (*OutputProcessorImplementation)(nil)
 
-	var w io.Writer = os.Stdout
+func NewOutputProcessor(
+	verbose bool,
+	quiet bool,
+	separator string,
+	writer io.Writer,
+) *OutputProcessorImplementation {
+	return &OutputProcessorImplementation{
+		verbose:   verbose,
+		quiet:     quiet,
+		separator: separator,
+		writer:    writer,
+	}
+}
 
-	if cfg.Filename != nil {
-		f, err := os.Create(*cfg.Filename)
-		if err != nil {
-			return fmt.Errorf("create file: %w", err)
-		}
+type OutputProcessorImplementation struct {
+	verbose   bool
+	quiet     bool
+	separator string
+	writer    io.Writer
+}
 
-		w = f
+func (svc *OutputProcessorImplementation) GenerateRandOutput(data []interface{}, apiInfo entities.APIInfo) error {
+	svc.generateAPIInfoOutput(apiInfo)
+
+	dataStr := make([]string, 0, len(data))
+
+	for _, v := range data {
+		dataStr = append(dataStr, fmt.Sprintf("%v", v))
 	}
 
-	for i, v := range data {
-		fmt.Fprintf(w, "%v", v)
-
-		if i+1 != len(data) {
-			fmt.Fprint(w, cfg.Separator)
-		}
+	if _, err := fmt.Fprintln(svc.writer, strings.Join(dataStr, svc.separator)); err != nil {
+		return fmt.Errorf("write output: %w", err)
 	}
-
-	fmt.Println()
 
 	return nil
 }
 
-func generateAPIInfoOutput(cfg config.Output, apiInfo entities.APIInfo) {
-	if cfg.Quite {
+func (svc *OutputProcessorImplementation) generateAPIInfoOutput(apiInfo entities.APIInfo) {
+	if svc.quiet {
 		return
 	}
 
-	showWarnings(apiInfo)
+	svc.showWarnings(apiInfo)
 
-	if !cfg.Verbose {
+	if !svc.verbose {
 		return
 	}
 
@@ -55,7 +67,7 @@ func generateAPIInfoOutput(cfg config.Output, apiInfo entities.APIInfo) {
 	fmt.Printf("random bits used: %d\n", apiInfo.BitsUsed)
 }
 
-func showWarnings(apiInfo entities.APIInfo) {
+func (svc *OutputProcessorImplementation) showWarnings(apiInfo entities.APIInfo) {
 	const (
 		maxRequests = 1000
 		maxBits     = 250_000

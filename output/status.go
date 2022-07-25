@@ -7,7 +7,7 @@ import (
 	"github.com/bohdanch-w/rand-api/entities"
 )
 
-func GenerageStatusOutput(status entities.UsageStatus) {
+func (svc *OutputProcessorImplementation) GenerateUsageOutput(status entities.UsageStatus) error {
 	format := `Usage statistic for API key %s:
   Status:        %s
   CreationTime:  %s
@@ -17,7 +17,8 @@ func GenerageStatusOutput(status entities.UsageStatus) {
   BitsLeft:      %d
 `
 
-	fmt.Printf(
+	_, err := fmt.Fprintf(
+		svc.writer,
 		format,
 		status.APIKey,
 		status.Status,
@@ -27,4 +28,9 @@ func GenerageStatusOutput(status entities.UsageStatus) {
 		status.RequestsLeft,
 		status.BitsLeft,
 	)
+	if err != nil {
+		return fmt.Errorf("write output: %w", err)
+	}
+
+	return nil
 }
