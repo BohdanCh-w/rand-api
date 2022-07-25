@@ -80,7 +80,7 @@ func (svc *RandomOrgRetriever) ExecuteRequest(
 	}
 
 	if randResp.Result.Random.Data == nil {
-		msg, err := handleErrorResponse(data)
+		msg, err := parseErrorResponse(data)
 		if err != nil {
 			return result, fmt.Errorf("decode error response: %w", err)
 		}
@@ -99,4 +99,14 @@ func (svc *RandomOrgRetriever) ExecuteRequest(
 	result = randResp.Result
 
 	return result, nil
+}
+
+func parseErrorResponse(data []byte) (error, error) {
+	var errResp entities.ErrorResponse
+
+	if err := json.Unmarshal(data, &errResp); err != nil {
+		return nil, err
+	}
+
+	return fmt.Errorf("%d - %s", errResp.Error.Code, errResp.Error.Message), nil
 }
