@@ -7,11 +7,12 @@ import (
 	"math"
 	"time"
 
-	"github.com/bohdanch-w/rand-api/config"
-	"github.com/bohdanch-w/rand-api/entities"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/shopspring/decimal"
 	"github.com/urfave/cli/v2"
+
+	"github.com/bohdanch-w/rand-api/config"
+	"github.com/bohdanch-w/rand-api/entities"
 )
 
 const (
@@ -26,6 +27,7 @@ const (
 	decimalPlacesMax = 14
 )
 
+// nolint: gomnd
 func NewDecimalCommand(cfg *config.AppConfig) *cli.Command {
 	return &cli.Command{
 		Name:    CommandName,
@@ -77,6 +79,8 @@ func (p *decimalParams) retrieveParams(ctx *cli.Context) error {
 }
 
 func (p *decimalParams) validate() error {
+	const errMaxUniqueRandomExceeded = entities.Error("`number` of unique requested values is greater than possible")
+
 	if err := validation.Validate(p.Base, validation.Required); err != nil {
 		return fmt.Errorf("`base` param is invalid: %w", err)
 	}
@@ -84,7 +88,7 @@ func (p *decimalParams) validate() error {
 	if err := validation.Validate(
 		p.Places, validation.Required.Error("must be no less than 1"),
 		validation.Min(1),
-		validation.Max(14),
+		validation.Max(decimalPlacesMax),
 	); err != nil {
 		return fmt.Errorf("`places` param is invalid: %w", err)
 	}
@@ -98,7 +102,7 @@ func (p *decimalParams) validate() error {
 	}
 
 	if p.Number > int(math.Pow10(p.Places)) {
-		return fmt.Errorf("`number` of unique requested values is greater than possible with decimal places = %d", p.Places)
+		return fmt.Errorf("%w decimal places = %d", errMaxUniqueRandomExceeded, p.Places)
 	}
 
 	return nil
@@ -116,7 +120,7 @@ func randDecimal(cfg *config.AppConfig) cli.ActionFunc {
 		}
 
 		decReq := decimalRequest{
-			ApiKey:        cfg.APIKey,
+			APIKey:        cfg.APIKey,
 			Number:        params.Number,
 			DecimalPlaces: params.Places,
 			Replacement:   !params.Unique,
@@ -151,19 +155,22 @@ func randDecimal(cfg *config.AppConfig) cli.ActionFunc {
 		base := decimal.NewFromFloat(params.Base)
 
 		outputData := make([]interface{}, 0, len(data))
+
 		for _, v := range data {
 			value, _ := base.Mul(decimal.NewFromFloat(v)).Float64()
 			outputData = append(outputData, value)
 		}
 
-		cfg.OutputProcessor.GenerateRandOutput(outputData, apiInfo)
+		if err := cfg.OutputProcessor.GenerateRandOutput(outputData, apiInfo); err != nil {
+			return fmt.Errorf("generate rand output: %w", err)
+		}
 
 		return nil
 	}
 }
 
 type decimalRequest struct {
-	ApiKey        string  `json:"apiKey"`
+	APIKey        string  `json:"apiKey"`
 	Number        int     `json:"n"`
 	DecimalPlaces int     `json:"decimalPlaces"`
 	Replacement   bool    `json:"replacement"`

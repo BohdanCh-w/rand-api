@@ -84,7 +84,7 @@ func retriveParamsFunc(cfg *config.AppConfig, f **os.File) cli.BeforeFunc {
 	}
 }
 
-func main() {
+func main() { // nolint: funlen
 	var (
 		apiKeyRequired = true
 		cfg            config.AppConfig
@@ -98,7 +98,7 @@ func main() {
 	}
 
 	app := &cli.App{
-		Name:  "randapi",
+		Name:  CommandName,
 		Usage: "cli program to retrieve values from random.org",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
@@ -109,7 +109,7 @@ func main() {
 			&cli.StringFlag{
 				Name:        apikeyParam,
 				Usage:       "specify custom apikey",
-				DefaultText: "embeded resource",
+				DefaultText: "embedded resource",
 				Required:    apiKeyRequired,
 			},
 			&cli.BoolFlag{

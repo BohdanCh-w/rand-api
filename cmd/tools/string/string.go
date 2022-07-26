@@ -6,15 +6,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bohdanch-w/rand-api/config"
-	"github.com/bohdanch-w/rand-api/entities"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/urfave/cli/v2"
+
+	"github.com/bohdanch-w/rand-api/config"
+	"github.com/bohdanch-w/rand-api/entities"
 )
 
 const (
 	CommandName  = "string"
-	lenghtParam  = "lenght"
+	lengthParam  = "length"
 	charsetParam = "charset"
 	numberParam  = "number"
 	uniqueParam  = "unique"
@@ -33,7 +34,7 @@ func NewStringCommand(cfg *config.AppConfig) *cli.Command {
 		Aliases: []string{"str"},
 		Flags: []cli.Flag{
 			&cli.IntFlag{
-				Name:    lenghtParam,
+				Name:    lengthParam,
 				Usage:   "length of generated strings [1, 32](If N > 1, all strings have same length)",
 				Aliases: []string{"l"},
 				Value:   1,
@@ -69,7 +70,7 @@ type stringParams struct {
 }
 
 func (p *stringParams) retriveParams(ctx *cli.Context) error {
-	p.Length = ctx.Int(lenghtParam)
+	p.Length = ctx.Int(lengthParam)
 	p.Charset = ctx.String(charsetParam)
 	p.Number = ctx.Int(numberParam)
 	p.Unique = ctx.Bool(uniqueParam)
@@ -119,7 +120,7 @@ func randString(cfg *config.AppConfig) cli.ActionFunc {
 		}
 
 		strReq := stringRequest{
-			ApiKey:      cfg.APIKey,
+			APIKey:      cfg.APIKey,
 			Length:      params.Length,
 			Characters:  params.Charset,
 			Number:      params.Number,
@@ -157,14 +158,16 @@ func randString(cfg *config.AppConfig) cli.ActionFunc {
 			outputData = append(outputData, v)
 		}
 
-		cfg.OutputProcessor.GenerateRandOutput(outputData, apiInfo)
+		if err := cfg.OutputProcessor.GenerateRandOutput(outputData, apiInfo); err != nil {
+			return fmt.Errorf("generate rand output: %w", err)
+		}
 
 		return nil
 	}
 }
 
 type stringRequest struct {
-	ApiKey      string  `json:"apiKey"`
+	APIKey      string  `json:"apiKey"`
 	Length      int     `json:"length"`
 	Characters  string  `json:"characters"`
 	Number      int     `json:"n"`

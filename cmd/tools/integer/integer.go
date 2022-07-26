@@ -23,8 +23,11 @@ const (
 	method      = "generateIntegers"
 	rangeMaxMin = 1_000_000_000
 	numberMax   = 10_000
+
+	intBase = 10
 )
 
+// nolint: gomnd
 func NewIntegerCommand(cfg *config.AppConfig) *cli.Command {
 	return &cli.Command{
 		Name:    commandName,
@@ -76,6 +79,11 @@ func (p *integerParams) retriveParams(ctx *cli.Context) error {
 }
 
 func (p *integerParams) validate() error {
+	const (
+		errToBiggerThanFrom        = entities.Error("`from` param must be less than `to`")
+		errMaxUniqueRandomExceeded = entities.Error("`number` of unique requested values is greater than possible")
+	)
+
 	if err := validation.Validate(p.From, validation.Min(-rangeMaxMin), validation.Max(rangeMaxMin)); err != nil {
 		return fmt.Errorf("`from` param is invalid: %w", err)
 	}
@@ -94,11 +102,11 @@ func (p *integerParams) validate() error {
 	}
 
 	if p.From >= p.To {
-		return fmt.Errorf("`from` param must be less than `to`")
+		return fmt.Errorf("%w: from %d to %d", errToBiggerThanFrom, p.From, p.To)
 	}
 
 	if (p.To-p.From) < int64(p.Number) && p.Unique {
-		return fmt.Errorf("`number` of unique requested values is greater than possible in range %d - %d", p.From, p.To)
+		return fmt.Errorf("%w in range %d - %d", errMaxUniqueRandomExceeded, p.From, p.To)
 	}
 
 	return nil
@@ -116,12 +124,12 @@ func integer(cfg *config.AppConfig) cli.ActionFunc {
 		}
 
 		intReq := integerRequest{
-			ApiKey:      cfg.APIKey,
+			APIKey:      cfg.APIKey,
 			Number:      params.Number,
 			Min:         params.From,
 			Max:         params.To,
 			Replacement: !params.Unique,
-			Base:        10,
+			Base:        intBase,
 			PregenRand:  nil,
 		}
 
@@ -155,14 +163,16 @@ func integer(cfg *config.AppConfig) cli.ActionFunc {
 			outputData = append(outputData, v)
 		}
 
-		cfg.OutputProcessor.GenerateRandOutput(outputData, apiInfo)
+		if err := cfg.OutputProcessor.GenerateRandOutput(outputData, apiInfo); err != nil {
+			return fmt.Errorf("generate rand output: %w", err)
+		}
 
 		return nil
 	}
 }
 
 type integerRequest struct {
-	ApiKey      string  `json:"apiKey"`
+	APIKey      string  `json:"apiKey"`
 	Number      int     `json:"n"`
 	Min         int64   `json:"min"`
 	Max         int64   `json:"max"`

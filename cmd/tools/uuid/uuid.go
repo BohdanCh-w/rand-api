@@ -70,7 +70,7 @@ func randUUID(cfg *config.AppConfig) cli.ActionFunc {
 		}
 
 		uuidReq := uuidRequest{
-			ApiKey:     cfg.APIKey,
+			APIKey:     cfg.APIKey,
 			Number:     params.Number,
 			PregenRand: nil,
 		}
@@ -105,14 +105,16 @@ func randUUID(cfg *config.AppConfig) cli.ActionFunc {
 			outputData = append(outputData, v)
 		}
 
-		cfg.OutputProcessor.GenerateRandOutput(outputData, apiInfo)
+		if err := cfg.OutputProcessor.GenerateRandOutput(outputData, apiInfo); err != nil {
+			return fmt.Errorf("generate rand output: %w", err)
+		}
 
 		return nil
 	}
 }
 
 type uuidRequest struct {
-	ApiKey     string  `json:"apiKey"`
+	APIKey     string  `json:"apiKey"`
 	Number     int     `json:"n"`
 	PregenRand *string `json:"pregeneratedRandomization"`
 }

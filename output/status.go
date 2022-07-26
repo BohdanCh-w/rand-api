@@ -7,7 +7,7 @@ import (
 	"github.com/bohdanch-w/rand-api/entities"
 )
 
-func (svc *OutputProcessorImplementation) GenerateUsageOutput(status entities.UsageStatus) error {
+func (svc *GeneratorImplementation) GenerateUsageOutput(status entities.UsageStatus) error {
 	format := `Usage statistic for API key %s:
   Status:        %s
   CreationTime:  %s

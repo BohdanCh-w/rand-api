@@ -27,6 +27,7 @@ const (
 	numberMax            = 10_000
 )
 
+// nolint: gomnd
 func NewGausianCommand(cfg *config.AppConfig) *cli.Command {
 	return &cli.Command{
 		Name:    CommandName,
@@ -127,7 +128,7 @@ func gausian(cfg *config.AppConfig) cli.ActionFunc {
 		}
 
 		gausReq := gausianRequest{
-			ApiKey:            cfg.APIKey,
+			APIKey:            cfg.APIKey,
 			Mean:              params.Mean,
 			StandardDeviation: params.Deviation,
 			SignificantDigits: params.SignificantDigits,
@@ -165,14 +166,16 @@ func gausian(cfg *config.AppConfig) cli.ActionFunc {
 			outputData = append(outputData, v)
 		}
 
-		cfg.OutputProcessor.GenerateRandOutput(outputData, apiInfo)
+		if err := cfg.OutputProcessor.GenerateRandOutput(outputData, apiInfo); err != nil {
+			return fmt.Errorf("generate rand output: %w", err)
+		}
 
 		return nil
 	}
 }
 
 type gausianRequest struct {
-	ApiKey            string  `json:"apiKey"`
+	APIKey            string  `json:"apiKey"`
 	Mean              float64 `json:"mean"`
 	StandardDeviation float64 `json:"standardDeviation"`
 	SignificantDigits int     `json:"significantDigits"`

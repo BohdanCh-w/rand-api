@@ -17,6 +17,12 @@ const (
 	jsonRPCVersion = "2.0"
 )
 
+const (
+	errUnexpectedStatusCode     = entities.Error("unexpected status code")
+	errRequestResponseMissmatch = entities.Error("request and response id mismatch")
+	errUnexpectedJSONRPSVersion = entities.Error("unexpected json rpc version")
+)
+
 var _ services.RandRetiever = (*RandomOrgRetriever)(nil)
 
 func NewRandomOrgRetriever(client *http.Client, signed bool) *RandomOrgRetriever {
@@ -33,7 +39,7 @@ type RandomOrgRetriever struct {
 	client         *http.Client
 }
 
-func (svc *RandomOrgRetriever) ExecuteRequest(
+func (svc *RandomOrgRetriever) ExecuteRequest( // nolint: funlen
 	ctx context.Context,
 	randReq *entities.RandomRequest,
 ) (entities.RandResponseResult, error) {
@@ -70,7 +76,7 @@ func (svc *RandomOrgRetriever) ExecuteRequest(
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return result, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return result, fmt.Errorf("%w: %d", errUnexpectedStatusCode, resp.StatusCode)
 	}
 
 	var randResp entities.RandResponse
@@ -89,11 +95,11 @@ func (svc *RandomOrgRetriever) ExecuteRequest(
 	}
 
 	if randResp.ID != randReq.ID {
-		return result, fmt.Errorf("response id mismatch request: %s != %s", randResp.ID.String(), randReq.ID.String())
+		return result, fmt.Errorf("%w: %s != %s", errRequestResponseMissmatch, randResp.ID.String(), randReq.ID.String())
 	}
 
 	if randResp.JsonrpcVersion != jsonRPCVersion {
-		return result, fmt.Errorf("unexpected jsonrpc version: %s", randResp.JsonrpcVersion)
+		return result, fmt.Errorf("%w: %s", errUnexpectedJSONRPSVersion, randResp.JsonrpcVersion)
 	}
 
 	result = randResp.Result
@@ -102,11 +108,13 @@ func (svc *RandomOrgRetriever) ExecuteRequest(
 }
 
 func parseErrorResponse(data []byte) (error, error) {
+	const errRandAPIError = entities.Error("rand API error")
+
 	var errResp entities.ErrorResponse
 
 	if err := json.Unmarshal(data, &errResp); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unmarshal error response: %w", err)
 	}
 
-	return fmt.Errorf("%d - %s", errResp.Error.Code, errResp.Error.Message), nil
+	return fmt.Errorf("%w: %d - %s", errRandAPIError, errResp.Error.Code, errResp.Error.Message), nil
 }

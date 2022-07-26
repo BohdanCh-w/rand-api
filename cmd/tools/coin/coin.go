@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bohdanch-w/rand-api/config"
-	"github.com/bohdanch-w/rand-api/entities"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/urfave/cli/v2"
+
+	"github.com/bohdanch-w/rand-api/config"
+	"github.com/bohdanch-w/rand-api/entities"
 )
 
 const (
@@ -17,13 +18,19 @@ const (
 	formatParam     = "format"
 	numberParam     = "number"
 
-	method      = "generateIntegers"
-	rangeMaxMin = 1_000_000_000
-	numberMax   = 10_000
+	method    = "generateIntegers"
+	numberMax = 10_000
 
 	formatEng = "eng"
 	formatUkr = "ukr"
 	formatNum = "num"
+
+	intBase = 10
+)
+
+const (
+	errMapperInvalidFormat = entities.Error("coin mapper invalid format")
+	errMapperInvalidValue  = entities.Error("coin mapper invalid value")
 )
 
 func NewCoinCommand(cfg *config.AppConfig) *cli.Command {
@@ -88,23 +95,23 @@ func coin(cfg *config.AppConfig) cli.ActionFunc {
 		}
 
 		coinReq := coinRequest{
-			ApiKey:      cfg.APIKey,
+			APIKey:      cfg.APIKey,
 			Number:      params.Number,
 			Min:         0,
 			Max:         1,
 			Replacement: true,
-			Base:        10,
+			Base:        intBase,
 			PregenRand:  nil,
 		}
 
 		req, err := cfg.RandRetriever.NewRequest(method, coinReq)
 		if err != nil {
-			return fmt.Errorf("create request: %v", err)
+			return fmt.Errorf("create request: %w", err)
 		}
 
 		result, err := cfg.RandRetriever.ExecuteRequest(ctx, &req)
 		if err != nil {
-			return fmt.Errorf("get result: %v", err)
+			return fmt.Errorf("get result: %w", err)
 		}
 
 		var (
@@ -122,25 +129,37 @@ func coin(cfg *config.AppConfig) cli.ActionFunc {
 			return fmt.Errorf("decode result: %w", err)
 		}
 
-		mapper, err := coinMappers(params.Format)
+		outputData, err := newFunction(params, data)
 		if err != nil {
 			return err
 		}
 
-		outputData := make([]interface{}, 0, len(data))
-		for _, v := range data {
-			side, err := coinSide(v, mapper)
-			if err != nil {
-				return fmt.Errorf("decode random data: %w", err)
-			}
-
-			outputData = append(outputData, side)
+		if err := cfg.OutputProcessor.GenerateRandOutput(outputData, apiInfo); err != nil {
+			return fmt.Errorf("generate rand output: %w", err)
 		}
-
-		cfg.OutputProcessor.GenerateRandOutput(outputData, apiInfo)
 
 		return nil
 	}
+}
+
+func newFunction(params coinParams, data coinResponseData) ([]interface{}, error) {
+	mapper, err := coinMappers(params.Format)
+	if err != nil {
+		return nil, err
+	}
+
+	outputData := make([]interface{}, 0, len(data))
+
+	for _, v := range data {
+		side, err := coinSide(v, mapper)
+		if err != nil {
+			return nil, fmt.Errorf("decode random data: %w", err)
+		}
+
+		outputData = append(outputData, side)
+	}
+
+	return outputData, nil
 }
 
 type coinMapper []interface{}
@@ -153,7 +172,7 @@ func coinMappers(format string) (coinMapper, error) {
 	}[format]
 
 	if !ok {
-		return nil, fmt.Errorf("invalid coin format: %s", format)
+		return nil, fmt.Errorf("%w: %s", errMapperInvalidFormat, format)
 	}
 
 	return mapper, nil
@@ -161,14 +180,14 @@ func coinMappers(format string) (coinMapper, error) {
 
 func coinSide(v int, mapper coinMapper) (interface{}, error) {
 	if v < 0 || v > 1 {
-		return nil, fmt.Errorf("invalid coin value %d", v)
+		return nil, fmt.Errorf("%w: %d", errMapperInvalidValue, v)
 	}
 
 	return mapper[v], nil
 }
 
 type coinRequest struct {
-	ApiKey      string  `json:"apiKey"`
+	APIKey      string  `json:"apiKey"`
 	Number      int     `json:"n"`
 	Min         int64   `json:"min"`
 	Max         int64   `json:"max"`

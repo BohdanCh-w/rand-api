@@ -3,6 +3,7 @@ package output
 import (
 	"fmt"
 	"io"
+	"log"
 	"strings"
 
 	"github.com/bohdanch-w/rand-api/entities"
@@ -11,15 +12,15 @@ import (
 
 const timeFormat = "15:04:05 02-01-2006"
 
-var _ services.OutputProcessor = (*OutputProcessorImplementation)(nil)
+var _ services.OutputGenerator = (*GeneratorImplementation)(nil)
 
 func NewOutputProcessor(
 	verbose bool,
 	quiet bool,
 	separator string,
 	writer io.Writer,
-) *OutputProcessorImplementation {
-	return &OutputProcessorImplementation{
+) *GeneratorImplementation {
+	return &GeneratorImplementation{
 		verbose:   verbose,
 		quiet:     quiet,
 		separator: separator,
@@ -27,14 +28,14 @@ func NewOutputProcessor(
 	}
 }
 
-type OutputProcessorImplementation struct {
+type GeneratorImplementation struct {
 	verbose   bool
 	quiet     bool
 	separator string
 	writer    io.Writer
 }
 
-func (svc *OutputProcessorImplementation) GenerateRandOutput(data []interface{}, apiInfo entities.APIInfo) error {
+func (svc *GeneratorImplementation) GenerateRandOutput(data []interface{}, apiInfo entities.APIInfo) error {
 	svc.generateAPIInfoOutput(apiInfo)
 
 	dataStr := make([]string, 0, len(data))
@@ -50,7 +51,7 @@ func (svc *OutputProcessorImplementation) GenerateRandOutput(data []interface{},
 	return nil
 }
 
-func (svc *OutputProcessorImplementation) generateAPIInfoOutput(apiInfo entities.APIInfo) {
+func (svc *GeneratorImplementation) generateAPIInfoOutput(apiInfo entities.APIInfo) {
 	if svc.quiet {
 		return
 	}
@@ -61,26 +62,29 @@ func (svc *OutputProcessorImplementation) generateAPIInfoOutput(apiInfo entities
 		return
 	}
 
-	fmt.Printf("request %s finished at %s\n", apiInfo.ID.String(), apiInfo.Timestamp.Format(timeFormat))
-	fmt.Printf("requests left: %d\n", apiInfo.RequestsLeft)
-	fmt.Printf("random bits left: %d\n", apiInfo.BitsLeft)
-	fmt.Printf("random bits used: %d\n", apiInfo.BitsUsed)
+	log.Printf("request %s finished at %s\n", apiInfo.ID.String(), apiInfo.Timestamp.Format(timeFormat))
+	log.Printf("requests left: %d\n", apiInfo.RequestsLeft)
+	log.Printf("random bits left: %d\n", apiInfo.BitsLeft)
+	log.Printf("random bits used: %d\n", apiInfo.BitsUsed)
 }
 
-func (svc *OutputProcessorImplementation) showWarnings(apiInfo entities.APIInfo) {
+func (svc *GeneratorImplementation) showWarnings(apiInfo entities.APIInfo) {
 	const (
 		maxRequests = 1000
 		maxBits     = 250_000
+
+		percent      = 100
+		warnTreshold = 5.0
 	)
 
-	requestsLeft := 100 * float64(apiInfo.RequestsLeft) / maxRequests
-	bitsLeft := 100 * float64(apiInfo.BitsLeft) / maxBits
+	requestsLeft := percent * float64(apiInfo.RequestsLeft) / maxRequests
+	bitsLeft := percent * float64(apiInfo.BitsLeft) / maxBits
 
-	if requestsLeft > 5.0 && bitsLeft > 5.0 {
+	if requestsLeft > warnTreshold && bitsLeft > warnTreshold {
 		return
 	}
 
-	fmt.Printf("WARN: requests left    - %2.2f%% - %d\n", requestsLeft, apiInfo.RequestsLeft)
-	fmt.Printf("WARN: random bits left - %2.2f%% - %d\n", requestsLeft, apiInfo.BitsLeft)
-	fmt.Println()
+	log.Printf("WARN: requests left    - %2.2f%% - %d\n", requestsLeft, apiInfo.RequestsLeft)
+	log.Printf("WARN: random bits left - %2.2f%% - %d\n", requestsLeft, apiInfo.BitsLeft)
+	log.Println()
 }

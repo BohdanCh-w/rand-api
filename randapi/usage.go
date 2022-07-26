@@ -22,9 +22,9 @@ func (svc *RandomOrgRetriever) GetUsage(ctx context.Context, apiKey string) (ent
 
 	enc.SetEscapeHTML(false)
 
-	randReq, err := svc.NewRequest("getUsage", usageStatusParams{ApiKey: apiKey})
+	randReq, err := svc.NewRequest("getUsage", usageStatusParams{APIKey: apiKey})
 	if err != nil {
-		return usage, fmt.Errorf("create request: %v", err)
+		return usage, fmt.Errorf("create request: %w", err)
 	}
 
 	if err := enc.Encode(randReq); err != nil {
@@ -52,7 +52,7 @@ func (svc *RandomOrgRetriever) GetUsage(ctx context.Context, apiKey string) (ent
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return usage, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return usage, fmt.Errorf("%w: %d", errUnexpectedStatusCode, resp.StatusCode)
 	}
 
 	var randResp usageStatusResponse
@@ -62,11 +62,11 @@ func (svc *RandomOrgRetriever) GetUsage(ctx context.Context, apiKey string) (ent
 	}
 
 	if randResp.ID != randReq.ID {
-		return usage, fmt.Errorf("response id mismatch request: %s != %s", randResp.ID.String(), randReq.ID.String())
+		return usage, fmt.Errorf("%w: %s != %s", errRequestResponseMissmatch, randResp.ID.String(), randReq.ID.String())
 	}
 
 	if randResp.JsonrpcVersion != jsonRPCVersion {
-		return usage, fmt.Errorf("unexpected jsonrpc version: %s", randResp.JsonrpcVersion)
+		return usage, fmt.Errorf("%w: %s", errUnexpectedJSONRPSVersion, randResp.JsonrpcVersion)
 	}
 
 	usage = randResp.Result
@@ -76,7 +76,7 @@ func (svc *RandomOrgRetriever) GetUsage(ctx context.Context, apiKey string) (ent
 }
 
 type usageStatusParams struct {
-	ApiKey string `json:"apiKey"`
+	APIKey string `json:"apiKey"`
 }
 
 type usageStatusResponse struct {

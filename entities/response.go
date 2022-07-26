@@ -22,3 +22,12 @@ type RandResponseResult struct {
 	RequestsLeft  uint64 `json:"requestsLeft"`
 	AdvisoryDelay uint64 `json:"advisoryDelay"`
 }
+
+type ErrorResponse struct {
+	ID             uuid.UUID `json:"id"`
+	JsonrpcVersion string    `json:"jsonrpc"`
+	Error          struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	} `json:"error"`
+}

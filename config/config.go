@@ -11,5 +11,5 @@ type AppConfig struct {
 	Timeout time.Duration
 
 	RandRetriever   services.RandRetiever
-	OutputProcessor services.OutputProcessor
+	OutputProcessor services.OutputGenerator
 }

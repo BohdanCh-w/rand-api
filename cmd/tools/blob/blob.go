@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bohdanch-w/rand-api/config"
-	"github.com/bohdanch-w/rand-api/entities"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/urfave/cli/v2"
+
+	"github.com/bohdanch-w/rand-api/config"
+	"github.com/bohdanch-w/rand-api/entities"
 )
 
 const (
@@ -28,6 +29,7 @@ const (
 	base64Format = "base64"
 )
 
+// nolint: gomnd
 func NewBlobCommand(cfg *config.AppConfig) *cli.Command {
 	return &cli.Command{
 		Name:  CommandName,
@@ -70,6 +72,11 @@ func (p *blobParams) retriveParams(ctx *cli.Context) error {
 }
 
 func (p *blobParams) validate() error {
+	const (
+		errSizeDivisibleBy8 = entities.Error("`size` parameter must be divisible by 8")
+		errSizeExceeded     = entities.Error("size exceed")
+	)
+
 	if err := validation.Validate(
 		p.Size,
 		validation.Required.Error("must be no less than 1"),
@@ -89,17 +96,17 @@ func (p *blobParams) validate() error {
 	}
 
 	if p.Size%8 != 0 {
-		return fmt.Errorf("`size` parameter must be divisible by 8")
+		return errSizeDivisibleBy8
 	}
 
 	if totalSize := p.Size * int64(p.Number); totalSize > sizeMax {
-		return fmt.Errorf("Total size %d must not exceed %d", totalSize, sizeMax)
+		return fmt.Errorf("%w: %d > %d", errSizeExceeded, totalSize, sizeMax)
 	}
 
 	return nil
 }
 
-func blob(cfg *config.AppConfig) cli.ActionFunc {
+func blob(cfg *config.AppConfig) cli.ActionFunc { // nolint: funlen
 	return func(cCtx *cli.Context) error {
 		ctx, cancel := context.WithTimeout(cCtx.Context, cfg.Timeout)
 		defer cancel()
@@ -110,15 +117,15 @@ func blob(cfg *config.AppConfig) cli.ActionFunc {
 			return err
 		}
 
-		intReq := blobRequest{
-			ApiKey:     cfg.APIKey,
+		blobReq := blobRequest{
+			APIKey:     cfg.APIKey,
 			Size:       params.Size,
 			Number:     params.Number,
 			Format:     blobFormat(params.Hex),
 			PregenRand: nil,
 		}
 
-		req, err := cfg.RandRetriever.NewRequest(method, intReq)
+		req, err := cfg.RandRetriever.NewRequest(method, blobReq)
 		if err != nil {
 			return fmt.Errorf("create request: %w", err)
 		}
@@ -145,6 +152,7 @@ func blob(cfg *config.AppConfig) cli.ActionFunc {
 		}
 
 		outputData := make([]interface{}, 0, len(data))
+
 		for _, v := range data {
 			value, err := decoder(v)
 			if err != nil {
@@ -154,14 +162,16 @@ func blob(cfg *config.AppConfig) cli.ActionFunc {
 			outputData = append(outputData, string(value))
 		}
 
-		cfg.OutputProcessor.GenerateRandOutput(outputData, apiInfo)
+		if err := cfg.OutputProcessor.GenerateRandOutput(outputData, apiInfo); err != nil {
+			return fmt.Errorf("generate rand output: %w", err)
+		}
 
 		return nil
 	}
 }
 
 type blobRequest struct {
-	ApiKey     string  `json:"apiKey"`
+	APIKey     string  `json:"apiKey"`
 	Size       int64   `json:"size"`
 	Number     int     `json:"n"`
 	Format     string  `json:"format"`

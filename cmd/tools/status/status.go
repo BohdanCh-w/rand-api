@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bohdanch-w/rand-api/config"
 	"github.com/urfave/cli/v2"
+
+	"github.com/bohdanch-w/rand-api/config"
 )
 
 func NewStatusCommand(cfg *config.AppConfig) *cli.Command {
@@ -27,7 +28,9 @@ func status(cfg *config.AppConfig) cli.ActionFunc {
 			return fmt.Errorf("get usage: %w", err)
 		}
 
-		cfg.OutputProcessor.GenerateUsageOutput(usage)
+		if err := cfg.OutputProcessor.GenerateUsageOutput(usage); err != nil {
+			return fmt.Errorf("generate usage output: %w", err)
+		}
 
 		return nil
 	}
