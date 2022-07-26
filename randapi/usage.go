@@ -31,7 +31,7 @@ func (svc *RandomOrgRetriever) GetUsage(ctx context.Context, apiKey string) (ent
 		return usage, fmt.Errorf("encode payload: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, randAPIPath, buf)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, svc.apiPath, buf)
 	if err != nil {
 		return usage, fmt.Errorf("create request: %w", err)
 	}

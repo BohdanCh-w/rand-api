@@ -30,6 +30,7 @@ var apiKeyResource embed.FS
 
 const (
 	CommandName    = "randapi"
+	apiPathParam   = "api-path"
 	apikeyParam    = "apikey"
 	signedParam    = "signed"
 	verboseParam   = "verbose"
@@ -38,8 +39,9 @@ const (
 	separatorParam = "separator"
 	outputParam    = "file"
 
-	defaultTimeout   = 5 * time.Second
-	defaultSeparator = " "
+	defaultTimeout     = 5 * time.Second
+	defaultSeparator   = " "
+	defaultRandAPIPath = "https://api.random.org/json-rpc/4/invoke"
 )
 
 func retriveParamsFunc(cfg *config.AppConfig, f **os.File) cli.BeforeFunc {
@@ -76,6 +78,7 @@ func retriveParamsFunc(cfg *config.AppConfig, f **os.File) cli.BeforeFunc {
 		)
 
 		cfg.RandRetriever = randapi.NewRandomOrgRetriever(
+			c.String(apiPathParam),
 			http.DefaultClient,
 			c.Bool(signedParam),
 		)
@@ -105,6 +108,11 @@ func main() { // nolint: funlen
 				Name:    signedParam,
 				Aliases: []string{"s"},
 				Usage:   "get signed reply from random.org",
+			},
+			&cli.StringFlag{
+				Name:  apiPathParam,
+				Usage: "random api path",
+				Value: defaultRandAPIPath,
 			},
 			&cli.StringFlag{
 				Name:        apikeyParam,

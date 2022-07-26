@@ -12,10 +12,7 @@ import (
 	"github.com/bohdanch-w/rand-api/services"
 )
 
-const (
-	randAPIPath    = "https://api.random.org/json-rpc/4/invoke"
-	jsonRPCVersion = "2.0"
-)
+const jsonRPCVersion = "2.0"
 
 const (
 	errUnexpectedStatusCode     = entities.Error("unexpected status code")
@@ -25,7 +22,7 @@ const (
 
 var _ services.RandRetiever = (*RandomOrgRetriever)(nil)
 
-func NewRandomOrgRetriever(client *http.Client, signed bool) *RandomOrgRetriever {
+func NewRandomOrgRetriever(randAPIPath string, client *http.Client, signed bool) *RandomOrgRetriever {
 	return &RandomOrgRetriever{
 		apiPath:        randAPIPath,
 		jsonRPCVersion: jsonRPCVersion,
@@ -55,7 +52,7 @@ func (svc *RandomOrgRetriever) ExecuteRequest( // nolint: funlen
 		return result, fmt.Errorf("encode payload: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, randAPIPath, buf)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, svc.apiPath, buf)
 	if err != nil {
 		return result, fmt.Errorf("create request: %w", err)
 	}
