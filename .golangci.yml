@@ -11,13 +11,36 @@ linters-settings:
       - web.Respond
       - web.NewError
       - fmt.Errorf
+  nolintlint:
+    allow-leading-space: true
 
 linters:
   enable-all: true
   disable:
-    - gci
+  # deprecated:
+    - ifshort
+    - varcheck
+    - deadcode
+    - golint
+    - structcheck
+    - interfacer
+    - nosnakecase
+    - maligned
+    - scopelint
     - exhaustivestruct
+    
+  # generics:
+    - rowserrcheck
+    - sqlclosecheck
+    - structcheck
+    - wastedassign
+
+    - gci
     - varnamelen
     - predeclared
     - paralleltest
     - exhaustruct
+    - gofmt
+    - gofumpt
+    - goimports
+    - nolintlint

@@ -1,4 +1,5 @@
 api-key
 bin/
+.test/
 
 makefile
