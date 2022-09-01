@@ -13,6 +13,8 @@ linters-settings:
       - fmt.Errorf
   nolintlint:
     allow-leading-space: true
+  dupl:
+    threshold: 400
 
 linters:
   enable-all: true

@@ -40,6 +40,15 @@ Usage statistic for API key b959bdf4-8a46-480d-a72b-f5d1be7711a6:
 	require.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(rr.String()))
 }
 
+func TestFailedGenerateUsageOutput(t *testing.T) {
+	rr := &ErrRecorder{err: entities.Error("test error")}
+
+	outputer := output.NewOutputProcessor(true, false, "", rr)
+
+	err := outputer.GenerateUsageOutput(entities.UsageStatus{})
+	require.EqualError(t, err, "write output: test error")
+}
+
 type Recorder struct {
 	data []byte
 }
@@ -52,4 +61,12 @@ func (r *Recorder) Write(b []byte) (int, error) {
 
 func (r *Recorder) String() string {
 	return string(r.data)
+}
+
+type ErrRecorder struct {
+	err error
+}
+
+func (r *ErrRecorder) Write(b []byte) (int, error) {
+	return 0, r.err
 }

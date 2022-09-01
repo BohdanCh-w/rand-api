@@ -73,10 +73,6 @@ func TestExecutorSuccess(t *testing.T) {
 }
 
 func TestExecutor_FailedResoponse(t *testing.T) { // nolint: funlen
-	const (
-		apiKey = "6b81b415-80e9-4481-a5f1-58e354742c00" // nolint: gosec
-	)
-
 	testcases := []struct {
 		name          string
 		response      func() string

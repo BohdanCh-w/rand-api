@@ -63,3 +63,12 @@ func TestGenerateRandOutput(t *testing.T) {
 		require.Equal(t, strings.TrimSpace(tc.expectedOutput), strings.TrimSpace(rr.String()))
 	}
 }
+
+func TestFailedGenerateRandOutput(t *testing.T) {
+	rr := &ErrRecorder{err: entities.Error("test error")}
+
+	outputer := output.NewOutputProcessor(true, false, "", rr)
+
+	err := outputer.GenerateRandOutput(nil, entities.APIInfo{})
+	require.EqualError(t, err, "write output: test error")
+}
