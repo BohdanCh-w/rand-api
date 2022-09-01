@@ -7,9 +7,10 @@ import (
 )
 
 type RandResponse struct {
-	ID             uuid.UUID          `json:"id"`
-	JsonrpcVersion string             `json:"jsonrpc"`
-	Result         RandResponseResult `json:"result"`
+	ID             uuid.UUID           `json:"id"`
+	JsonrpcVersion string              `json:"jsonrpc"`
+	Result         *RandResponseResult `json:"result"`
+	Error          *ErrorResponse      `json:"error"`
 }
 
 type RandResponseResult struct {
@@ -24,10 +25,6 @@ type RandResponseResult struct {
 }
 
 type ErrorResponse struct {
-	ID             uuid.UUID `json:"id"`
-	JsonrpcVersion string    `json:"jsonrpc"`
-	Error          struct {
-		Code    int    `json:"code"`
-		Message string `json:"message"`
-	} `json:"error"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }

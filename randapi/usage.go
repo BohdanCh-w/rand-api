@@ -5,12 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
-	"github.com/google/uuid"
-
 	"github.com/bohdanch-w/rand-api/entities"
+	"github.com/google/uuid"
 )
 
 func (svc *RandomOrgRetriever) GetUsage(ctx context.Context, apiKey string) (entities.UsageStatus, error) {
@@ -46,30 +45,26 @@ func (svc *RandomOrgRetriever) GetUsage(ctx context.Context, apiKey string) (ent
 
 	defer resp.Body.Close()
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return usage, fmt.Errorf("read body: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return usage, fmt.Errorf("%w: %d", errUnexpectedStatusCode, resp.StatusCode)
+		return usage, fmt.Errorf("%w: %d", ErrUnexpectedStatusCode, resp.StatusCode)
 	}
 
-	var randResp usageStatusResponse
+	var randResp UsageStatusResponse
 
-	if err := json.Unmarshal(data, &randResp); err != nil {
-		return usage, fmt.Errorf("decode response: %w", err)
+	if err := randResp.parse(data); err != nil {
+		return usage, fmt.Errorf("invalid response: %w", err)
 	}
 
 	if randResp.ID != randReq.ID {
-		return usage, fmt.Errorf("%w: %s != %s", errRequestResponseMissmatch, randResp.ID.String(), randReq.ID.String())
+		return usage, fmt.Errorf("%w: %s != %s", ErrRequestResponseMissmatch, randResp.ID.String(), randReq.ID.String())
 	}
 
-	if randResp.JsonrpcVersion != jsonRPCVersion {
-		return usage, fmt.Errorf("%w: %s", errUnexpectedJSONRPSVersion, randResp.JsonrpcVersion)
-	}
-
-	usage = randResp.Result
+	usage = *randResp.Result
 	usage.APIKey = apiKey
 
 	return usage, nil
@@ -79,8 +74,29 @@ type usageStatusParams struct {
 	APIKey string `json:"apiKey"`
 }
 
-type usageStatusResponse struct {
-	ID             uuid.UUID            `json:"id"`
-	JsonrpcVersion string               `json:"jsonrpc"`
-	Result         entities.UsageStatus `json:"result"`
+type UsageStatusResponse struct {
+	ID             uuid.UUID               `json:"id"`
+	JsonrpcVersion string                  `json:"jsonrpc"`
+	Result         *entities.UsageStatus   `json:"result"`
+	Error          *entities.ErrorResponse `json:"error"`
+}
+
+func (resp *UsageStatusResponse) parse(data []byte) error {
+	if err := json.Unmarshal(data, resp); err != nil {
+		return fmt.Errorf("decode response: %w", err)
+	}
+
+	if resp.Error != nil {
+		return fmt.Errorf("%w: %d - %s", ErrErrorInResponse, resp.Error.Code, resp.Error.Message)
+	}
+
+	if resp.Result == nil {
+		return entities.Error("missing result in response")
+	}
+
+	if resp.JsonrpcVersion != jsonRPCVersion {
+		return fmt.Errorf("%w: %s", ErrUnexpectedJSONRPSVersion, resp.JsonrpcVersion)
+	}
+
+	return nil
 }
