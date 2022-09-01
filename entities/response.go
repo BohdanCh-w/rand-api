@@ -16,7 +16,7 @@ type RandResponse struct {
 type RandResponseResult struct {
 	Random struct {
 		Data      json.RawMessage `json:"data"`
-		Timestamp randTime        `json:"completionTime"`
+		Timestamp RandTime        `json:"completionTime"`
 	} `json:"random"`
 	BitsUsed      uint64 `json:"bitsUsed"`
 	BitsLeft      uint64 `json:"bitsLeft"`
