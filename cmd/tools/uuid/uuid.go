@@ -22,7 +22,7 @@ const (
 func NewUUIDCommand(cfg *config.AppConfig) *cli.Command {
 	return &cli.Command{
 		Name:  "uuid",
-		Usage: "generate random uuid V4",
+		Usage: "generate random uuid",
 		Flags: []cli.Flag{
 			&cli.IntFlag{
 				Name:    "number",
