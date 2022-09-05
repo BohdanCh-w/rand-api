@@ -46,7 +46,7 @@ To get options for specific command use `randapi [command] -h`
 ## TODO List
 
 - Finish documentation
-- Add check for unique strings
+- Add check for unique strings + only unique chars
 - Add version command
 - Add integer sequenses command
 - Pass number value to command as argument (not option). P.S. size for BLOB

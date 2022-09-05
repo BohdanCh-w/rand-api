@@ -18,16 +18,6 @@ import (
 	"github.com/bohdanch-w/rand-api/services/mock"
 )
 
-type coinRequest struct {
-	APIKey      string
-	Number      int
-	Min         int64
-	Max         int64
-	Replacement bool
-	Base        int8
-	PregenRand  *string
-}
-
 func TestIntegerCommand_SuccessNoParam(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -61,7 +51,7 @@ func TestIntegerCommand_SuccessNoParam(t *testing.T) {
 			Return(helpers_test.TestRandResult(t, "[15]"), nil),
 
 		mockOutputProcessor.EXPECT().
-			GenerateRandOutput([]any{15}, helpers_test.TestRandApiInfo(t, req.ID)).
+			GenerateRandOutput([]any{15}, helpers_test.TestRandAPIInfo(t, req.ID)).
 			Return(nil),
 	)
 
@@ -115,7 +105,7 @@ func TestIntegerCommand_SuccessWithParams(t *testing.T) {
 			Return(helpers_test.TestRandResult(t, "[14, 34, -3]"), nil),
 
 		mockOutputProcessor.EXPECT().
-			GenerateRandOutput([]any{14, 34, -3}, helpers_test.TestRandApiInfo(t, req.ID)).
+			GenerateRandOutput([]any{14, 34, -3}, helpers_test.TestRandAPIInfo(t, req.ID)).
 			Return(nil),
 	)
 

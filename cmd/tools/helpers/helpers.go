@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// nolint: gomnd
 func TestRandResult(t *testing.T, str string) entities.RandResponseResult {
 	t.Helper()
 
@@ -24,7 +25,8 @@ func TestRandResult(t *testing.T, str string) entities.RandResponseResult {
 	}
 }
 
-func TestRandApiInfo(t *testing.T, id uuid.UUID) entities.APIInfo {
+// nolint: gomnd
+func TestRandAPIInfo(t *testing.T, id uuid.UUID) entities.APIInfo {
 	t.Helper()
 
 	return entities.APIInfo{
