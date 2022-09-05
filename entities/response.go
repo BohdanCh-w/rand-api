@@ -14,14 +14,16 @@ type RandResponse struct {
 }
 
 type RandResponseResult struct {
-	Random struct {
-		Data      json.RawMessage `json:"data"`
-		Timestamp RandTime        `json:"completionTime"`
-	} `json:"random"`
-	BitsUsed      uint64 `json:"bitsUsed"`
-	BitsLeft      uint64 `json:"bitsLeft"`
-	RequestsLeft  uint64 `json:"requestsLeft"`
-	AdvisoryDelay uint64 `json:"advisoryDelay"`
+	Random        RandomData `json:"random"`
+	BitsUsed      uint64     `json:"bitsUsed"`
+	BitsLeft      uint64     `json:"bitsLeft"`
+	RequestsLeft  uint64     `json:"requestsLeft"`
+	AdvisoryDelay uint64     `json:"advisoryDelay"`
+}
+
+type RandomData struct {
+	Data      json.RawMessage `json:"data"`
+	Timestamp RandTime        `json:"completionTime"`
 }
 
 type ErrorResponse struct {
