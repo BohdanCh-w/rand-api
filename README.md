@@ -47,7 +47,6 @@ To get options for specific command use `randapi [command] -h`
 
 - Finish documentation
 - Add check for unique strings + only unique chars
-- Add version command
 - Add integer sequenses command
 - Add Signed requests
 - Add Pregenerated requests

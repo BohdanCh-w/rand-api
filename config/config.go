@@ -7,6 +7,8 @@ import (
 )
 
 type AppConfig struct {
+	Version string
+
 	APIKey  string
 	Timeout time.Duration
 

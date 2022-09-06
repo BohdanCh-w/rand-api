@@ -17,6 +17,7 @@ import (
 	"github.com/bohdanch-w/rand-api/cmd/tools/status"
 	randstr "github.com/bohdanch-w/rand-api/cmd/tools/string"
 	"github.com/bohdanch-w/rand-api/cmd/tools/uuid"
+	"github.com/bohdanch-w/rand-api/cmd/tools/version"
 	"github.com/bohdanch-w/rand-api/config"
 	"github.com/bohdanch-w/rand-api/output"
 	"github.com/bohdanch-w/rand-api/randapi"
@@ -91,12 +92,14 @@ func main() { // nolint: funlen
 	var (
 		apiKeyRequired = true
 		cfg            config.AppConfig
-		data, _        = apiKeyResource.ReadFile("resources/api-key")
+		apiKeyData, _  = apiKeyResource.ReadFile("resources/api-key")
+		versionData, _ = apiKeyResource.ReadFile("resources/version")
 		f              *os.File
 	)
 
-	if len(data) > 0 {
-		cfg.APIKey = string(data)
+	if len(apiKeyData) > 0 {
+		cfg.APIKey = string(apiKeyData)
+		cfg.Version = string(versionData)
 		apiKeyRequired = false
 	}
 
@@ -158,6 +161,7 @@ func main() { // nolint: funlen
 			uuid.NewUUIDCommand(&cfg),
 			blob.NewBlobCommand(&cfg),
 			status.NewStatusCommand(&cfg),
+			version.NewVersionCommand(&cfg),
 		},
 	}
 
