@@ -4,13 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/bohdanch-w/rand-api/entities"
 	"github.com/google/uuid"
+
+	"github.com/bohdanch-w/rand-api/entities"
+	"github.com/bohdanch-w/rand-api/services"
 )
 
-func NewRandomRequest(method string, params interface{}) (entities.RandomRequest, error) {
+func (svc *RandomOrgRetriever) NewRequest(
+	method string,
+	params services.RandParameters,
+) (entities.RandomRequest, error) {
+	const errParameterInvalid = entities.Error("invalid parameters")
+
 	if params == nil {
-		return entities.RandomRequest{}, fmt.Errorf("invalid params")
+		return entities.RandomRequest{}, errParameterInvalid
 	}
 
 	bb, err := json.Marshal(params)

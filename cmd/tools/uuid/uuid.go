@@ -8,8 +8,6 @@ import (
 
 	"github.com/bohdanch-w/rand-api/config"
 	"github.com/bohdanch-w/rand-api/entities"
-	"github.com/bohdanch-w/rand-api/output"
-	"github.com/bohdanch-w/rand-api/randapi"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/google/uuid"
@@ -20,6 +18,22 @@ const (
 	method    = "generateUUIDs"
 	numberMax = 10_000
 )
+
+func NewUUIDCommand(cfg *config.AppConfig) *cli.Command {
+	return &cli.Command{
+		Name:  "uuid",
+		Usage: "generate random uuid",
+		Flags: []cli.Flag{
+			&cli.IntFlag{
+				Name:    "number",
+				Usage:   "number of values returned [1, 10000]",
+				Aliases: []string{"N"},
+				Value:   1,
+			},
+		},
+		Action: randUUID(cfg),
+	}
+}
 
 type uuidParams struct {
 	Number int
@@ -44,7 +58,7 @@ func (p *uuidParams) validate() error {
 	return nil
 }
 
-func UUID(cfg *config.AppConfig) cli.ActionFunc {
+func randUUID(cfg *config.AppConfig) cli.ActionFunc {
 	return func(cCtx *cli.Context) error {
 		ctx, cancel := context.WithTimeout(cCtx.Context, cfg.Timeout)
 		defer cancel()
@@ -56,17 +70,17 @@ func UUID(cfg *config.AppConfig) cli.ActionFunc {
 		}
 
 		uuidReq := uuidRequest{
-			ApiKey:     cfg.APIKey,
+			APIKey:     cfg.APIKey,
 			Number:     params.Number,
 			PregenRand: nil,
 		}
 
-		req, err := randapi.NewRandomRequest(method, uuidReq)
+		req, err := cfg.RandRetriever.NewRequest(method, uuidReq)
 		if err != nil {
 			return fmt.Errorf("create request: %w", err)
 		}
 
-		result, err := randapi.RandAPIExecute(ctx, &req)
+		result, err := cfg.RandRetriever.ExecuteRequest(ctx, &req)
 		if err != nil {
 			return fmt.Errorf("get result: %w", err)
 		}
@@ -91,14 +105,16 @@ func UUID(cfg *config.AppConfig) cli.ActionFunc {
 			outputData = append(outputData, v)
 		}
 
-		output.GenerateOutput(cfg.Output, outputData, apiInfo)
+		if err := cfg.OutputProcessor.GenerateRandOutput(outputData, apiInfo); err != nil {
+			return fmt.Errorf("generate rand output: %w", err)
+		}
 
 		return nil
 	}
 }
 
 type uuidRequest struct {
-	ApiKey     string  `json:"apiKey"`
+	APIKey     string  `json:"apiKey"`
 	Number     int     `json:"n"`
 	PregenRand *string `json:"pregeneratedRandomization"`
 }

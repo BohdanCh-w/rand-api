@@ -3,72 +3,88 @@ package output
 import (
 	"fmt"
 	"io"
-	"os"
+	"log"
+	"strings"
 
-	"github.com/bohdanch-w/rand-api/config"
 	"github.com/bohdanch-w/rand-api/entities"
+	"github.com/bohdanch-w/rand-api/services"
 )
 
 const timeFormat = "15:04:05 02-01-2006"
 
-func GenerateOutput(cfg config.Output, data []interface{}, apiInfo entities.APIInfo) error {
-	generateAPIInfoOutput(cfg, apiInfo)
+var _ services.OutputGenerator = (*GeneratorImplementation)(nil)
 
-	var w io.Writer = os.Stdout
+func NewOutputProcessor(
+	verbose bool,
+	quiet bool,
+	separator string,
+	writer io.Writer,
+) *GeneratorImplementation {
+	return &GeneratorImplementation{
+		verbose:   verbose,
+		quiet:     quiet,
+		separator: separator,
+		writer:    writer,
+	}
+}
 
-	if cfg.Filename != nil {
-		f, err := os.Create(*cfg.Filename)
-		if err != nil {
-			return fmt.Errorf("create file: %w", err)
-		}
+type GeneratorImplementation struct {
+	verbose   bool
+	quiet     bool
+	separator string
+	writer    io.Writer
+}
 
-		w = f
+func (svc *GeneratorImplementation) GenerateRandOutput(data []interface{}, apiInfo entities.APIInfo) error {
+	svc.generateAPIInfoOutput(apiInfo)
+
+	dataStr := make([]string, 0, len(data))
+
+	for _, v := range data {
+		dataStr = append(dataStr, fmt.Sprintf("%v", v))
 	}
 
-	for i, v := range data {
-		fmt.Fprintf(w, "%v", v)
-
-		if i+1 != len(data) {
-			fmt.Fprint(w, cfg.Separator)
-		}
+	if _, err := fmt.Fprintln(svc.writer, strings.Join(dataStr, svc.separator)); err != nil {
+		return fmt.Errorf("write output: %w", err)
 	}
-
-	fmt.Println()
 
 	return nil
 }
 
-func generateAPIInfoOutput(cfg config.Output, apiInfo entities.APIInfo) {
-	if cfg.Quite {
+func (svc *GeneratorImplementation) generateAPIInfoOutput(apiInfo entities.APIInfo) {
+	if svc.quiet {
 		return
 	}
 
-	showWarnings(apiInfo)
+	svc.showWarnings(apiInfo)
 
-	if !cfg.Verbose {
+	if !svc.verbose {
 		return
 	}
 
-	fmt.Printf("request %s finished at %s\n", apiInfo.ID.String(), apiInfo.Timestamp.Format(timeFormat))
-	fmt.Printf("requests left: %d\n", apiInfo.RequestsLeft)
-	fmt.Printf("random bits left: %d\n", apiInfo.BitsLeft)
-	fmt.Printf("random bits used: %d\n", apiInfo.BitsUsed)
+	log.Printf("request %s finished at %s\n", apiInfo.ID.String(), apiInfo.Timestamp.Format(timeFormat))
+	log.Printf("requests left: %d\n", apiInfo.RequestsLeft)
+	log.Printf("random bits left: %d\n", apiInfo.BitsLeft)
+	log.Printf("random bits used: %d\n", apiInfo.BitsUsed)
 }
 
-func showWarnings(apiInfo entities.APIInfo) {
+func (svc *GeneratorImplementation) showWarnings(apiInfo entities.APIInfo) {
 	const (
 		maxRequests = 1000
 		maxBits     = 250_000
+
+		percent      = 100
+		warnTreshold = 5.0
 	)
 
-	requestsLeft := 100 * float64(apiInfo.RequestsLeft) / maxRequests
-	bitsLeft := 100 * float64(apiInfo.BitsLeft) / maxBits
+	requestsLeft := percent * float64(apiInfo.RequestsLeft) / maxRequests
+	bitsLeft := percent * float64(apiInfo.BitsLeft) / maxBits
 
-	if requestsLeft > 5.0 && bitsLeft > 5.0 {
+	if requestsLeft > warnTreshold && bitsLeft > warnTreshold {
 		return
 	}
 
-	fmt.Printf("WARN: requests left    - %2.2f%% - %d\n", requestsLeft, apiInfo.RequestsLeft)
-	fmt.Printf("WARN: random bits left - %2.2f%% - %d\n", requestsLeft, apiInfo.BitsLeft)
-	fmt.Println()
+	log.Printf("WARN: requests left    - %2.2f%% - %d\n", requestsLeft, apiInfo.RequestsLeft)
+	log.Printf("WARN: random bits left - %2.2f%% - %d\n", requestsLeft, apiInfo.BitsLeft)
+	log.Println()
 }

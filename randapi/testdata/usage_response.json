@@ -1,0 +1,12 @@
+{
+    "jsonrpc": "2.0",
+    "result": {
+        "status": "running",
+        "creationTime": "2022-07-07 20:22:20Z",
+        "bitsLeft": 9000,
+        "requestsLeft": 80,
+        "totalBits": 110000,
+        "totalRequests": 700
+    },
+    "id": "00000000-0000-0000-0000-000000000000"
+}
