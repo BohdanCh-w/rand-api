@@ -1,7 +1,7 @@
 package version
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/urfave/cli/v2"
 
@@ -18,7 +18,10 @@ func NewVersionCommand(cfg *config.AppConfig) *cli.Command {
 
 func version(cfg *config.AppConfig) cli.ActionFunc {
 	return func(cCtx *cli.Context) error {
-		fmt.Printf("rand-api v%s; go version go1.18.5\n", cfg.Version)
+		logger := log.Default()
+		logger.SetFlags(0)
+
+		logger.Printf("rand-api v%s; go version go1.18.5\n", cfg.Version)
 
 		return nil
 	}

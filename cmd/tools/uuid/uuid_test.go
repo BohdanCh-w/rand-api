@@ -74,7 +74,7 @@ func TestUuidCommand_SuccessNoParam(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestUuidCommand_SuccessWithParams(t *testing.T) {
+func TestUuidCommand_SuccessWithParams(t *testing.T) { // nolint: funlen
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 

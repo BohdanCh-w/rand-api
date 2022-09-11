@@ -3,13 +3,14 @@ package string_test
 import (
 	"encoding/json"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 	"github.com/urfave/cli/v2"
 
 	helpers_test "github.com/bohdanch-w/rand-api/cmd/tools/helpers"
@@ -43,6 +44,12 @@ func TestStringCommand_SuccessNoParam(t *testing.T) {
 				encReq, err := json.Marshal(req)
 				require.NoError(t, err)
 
+				chars := gjson.GetBytes(encReq, "characters").String()
+
+				encReq, err = sjson.DeleteBytes(encReq, "characters")
+				require.NoError(t, err)
+
+				require.ElementsMatch(t, []rune(chars), []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_")) // nolint: lll
 				require.JSONEq(t, string(data), string(encReq))
 			}).
 			Return(req, nil),
@@ -97,6 +104,12 @@ func TestStringCommand_SuccessWithParams(t *testing.T) {
 				encReq, err := json.Marshal(req)
 				require.NoError(t, err)
 
+				chars := gjson.GetBytes(encReq, "characters").String()
+
+				encReq, err = sjson.DeleteBytes(encReq, "characters")
+				require.NoError(t, err)
+
+				require.ElementsMatch(t, []rune(chars), []rune("abcdef"))
 				require.JSONEq(t, string(data), string(encReq))
 			}).
 			Return(req, nil),
@@ -123,7 +136,7 @@ func TestStringCommand_SuccessWithParams(t *testing.T) {
 		Commands: []*cli.Command{command},
 	}
 
-	err := app.Run([]string{"main.go", "str", "-l", "5", "-c", "abcdef", "-N", "3", "-u"})
+	err := app.Run([]string{"main.go", "str", "-l", "5", "-c", "abcccdefea", "-N", "3", "-u"})
 	require.NoError(t, err)
 }
 
@@ -164,13 +177,13 @@ func TestStringCommand_BadParams(t *testing.T) {
 			expectedError: "`charset` param is invalid: length must be no less than 1",
 		},
 		{
-			params:        []string{"-c", strings.Repeat("saass", 50)},
+			params:        []string{"-c", "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_АБВГДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯабвгдиіїйклмнопрстуфхцчшщьюя0123456789;!@#$%^&*"}, // nolint: lll
 			expectedError: "`charset` param is invalid: must be no greater than 128",
 		},
-		// { // check not yet implemented
-		// 	params:        []string{"-c", "abc", "-l", "3", "-N", "100", "-u"},
-		// 	expectedError: "`number` of unique requested values is greater than possible in range 1 - 10",
-		// },
+		{
+			params:        []string{"-c", "abc", "-l", "3", "-N", "100", "-u"},
+			expectedError: "`number` of unique requested values is greater than possible with max possible 27",
+		},
 	}
 
 	for _, tc := range testcases {

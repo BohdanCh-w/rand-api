@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"time"
 
+	"github.com/bohdanch-w/datatypes/hashset"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/urfave/cli/v2"
 
@@ -75,10 +77,14 @@ func (p *stringParams) retriveParams(ctx *cli.Context) error {
 	p.Number = ctx.Int(numberParam)
 	p.Unique = ctx.Bool(uniqueParam)
 
+	p.Charset = string(hashset.New([]rune(p.Charset)...).Values())
+
 	return p.validate()
 }
 
 func (p *stringParams) validate() error {
+	const errMaxUniqueRandomExceeded = entities.Error("`number` of unique requested values is greater than possible")
+
 	if err := validation.Validate(
 		p.Length,
 		validation.Required.Error("must be no less than 1"),
@@ -103,6 +109,13 @@ func (p *stringParams) validate() error {
 		validation.Max(numberMax),
 	); err != nil {
 		return fmt.Errorf("`number` param is invalid: %w", err)
+	}
+
+	if p.Unique {
+		possibleRand := int(math.Pow(float64(len(p.Charset)), float64(p.Length)))
+		if possibleRand < p.Number {
+			return fmt.Errorf("%w with max possible %d", errMaxUniqueRandomExceeded, possibleRand)
+		}
 	}
 
 	return nil

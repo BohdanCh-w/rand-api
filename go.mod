@@ -3,6 +3,7 @@ module github.com/bohdanch-w/rand-api
 go 1.18
 
 require (
+	github.com/bohdanch-w/datatypes v0.1.0
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
