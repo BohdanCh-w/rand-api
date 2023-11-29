@@ -133,7 +133,7 @@ func gausian(cfg *config.AppConfig) cli.ActionFunc {
 			StandardDeviation: params.Deviation,
 			SignificantDigits: params.SignificantDigits,
 			Number:            params.Number,
-			PregenRand:        nil,
+			PregenRand:        cfg.PregenRand,
 		}
 
 		req, err := cfg.RandRetriever.NewRequest(method, gausReq)
@@ -175,12 +175,12 @@ func gausian(cfg *config.AppConfig) cli.ActionFunc {
 }
 
 type gausianRequest struct {
-	APIKey            string  `json:"apiKey"`
-	Mean              float64 `json:"mean"`
-	StandardDeviation float64 `json:"standardDeviation"`
-	SignificantDigits int     `json:"significantDigits"`
-	Number            int     `json:"n"`
-	PregenRand        *string `json:"pregeneratedRandomization"`
+	APIKey            string              `json:"apiKey"`
+	Mean              float64             `json:"mean"`
+	StandardDeviation float64             `json:"standardDeviation"`
+	SignificantDigits int                 `json:"significantDigits"`
+	Number            int                 `json:"n"`
+	PregenRand        entities.PregenRand `json:"pregeneratedRandomization"`
 }
 
 type gausianResponseData []float64

@@ -130,7 +130,7 @@ func integer(cfg *config.AppConfig) cli.ActionFunc {
 			Max:         params.To,
 			Replacement: !params.Unique,
 			Base:        intBase,
-			PregenRand:  nil,
+			PregenRand:  cfg.PregenRand,
 		}
 
 		req, err := cfg.RandRetriever.NewRequest(method, intReq)
@@ -172,13 +172,13 @@ func integer(cfg *config.AppConfig) cli.ActionFunc {
 }
 
 type integerRequest struct {
-	APIKey      string  `json:"apiKey"`
-	Number      int     `json:"n"`
-	Min         int64   `json:"min"`
-	Max         int64   `json:"max"`
-	Replacement bool    `json:"replacement"`
-	Base        int8    `json:"base"`
-	PregenRand  *string `json:"pregeneratedRandomization"`
+	APIKey      string              `json:"apiKey"`
+	Number      int                 `json:"n"`
+	Min         int64               `json:"min"`
+	Max         int64               `json:"max"`
+	Replacement bool                `json:"replacement"`
+	Base        int8                `json:"base"`
+	PregenRand  entities.PregenRand `json:"pregeneratedRandomization"`
 }
 
 type integerResponseData []int

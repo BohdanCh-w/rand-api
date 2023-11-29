@@ -101,7 +101,7 @@ func coin(cfg *config.AppConfig) cli.ActionFunc {
 			Max:         1,
 			Replacement: true,
 			Base:        intBase,
-			PregenRand:  nil,
+			PregenRand:  cfg.PregenRand,
 		}
 
 		req, err := cfg.RandRetriever.NewRequest(method, coinReq)
@@ -187,13 +187,13 @@ func coinSide(v int, mapper coinMapper) (interface{}, error) {
 }
 
 type coinRequest struct {
-	APIKey      string  `json:"apiKey"`
-	Number      int     `json:"n"`
-	Min         int64   `json:"min"`
-	Max         int64   `json:"max"`
-	Replacement bool    `json:"replacement"`
-	Base        int8    `json:"base"`
-	PregenRand  *string `json:"pregeneratedRandomization"`
+	APIKey      string              `json:"apiKey"`
+	Number      int                 `json:"n"`
+	Min         int64               `json:"min"`
+	Max         int64               `json:"max"`
+	Replacement bool                `json:"replacement"`
+	Base        int8                `json:"base"`
+	PregenRand  entities.PregenRand `json:"pregeneratedRandomization"`
 }
 
 type coinResponseData []int

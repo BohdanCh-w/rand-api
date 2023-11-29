@@ -12,9 +12,9 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/bohdanch-w/rand-api/cmd/tools/blob"
-	helpers_test "github.com/bohdanch-w/rand-api/cmd/tools/helpers"
 	"github.com/bohdanch-w/rand-api/config"
 	"github.com/bohdanch-w/rand-api/entities"
+	"github.com/bohdanch-w/rand-api/pkg/testutils"
 	"github.com/bohdanch-w/rand-api/services/mock"
 )
 
@@ -48,10 +48,10 @@ func TestBlobCommand_SuccessNoParam(t *testing.T) {
 
 		mockRandRetriever.EXPECT().
 			ExecuteRequest(gomock.Any(), &req).
-			Return(helpers_test.TestRandResult(t, `["Ox8NH7tk4HM="]`), nil),
+			Return(testutils.TestRandResult(t, `["Ox8NH7tk4HM="]`), nil),
 
 		mockOutputProcessor.EXPECT().
-			GenerateRandOutput([]any{";\x1f\r\x1f\xbbd\xe0s"}, helpers_test.TestRandAPIInfo(t, req.ID)).
+			GenerateRandOutput([]any{";\x1f\r\x1f\xbbd\xe0s"}, testutils.TestRandAPIInfo(t, req.ID)).
 			Return(nil),
 	)
 
@@ -102,12 +102,12 @@ func TestBlobCommand_SuccessWithParams(t *testing.T) {
 
 		mockRandRetriever.EXPECT().
 			ExecuteRequest(gomock.Any(), &req).
-			Return(helpers_test.TestRandResult(t, `["c5d13a3b", "6db0943e", "322a961a"]`), nil),
+			Return(testutils.TestRandResult(t, `["c5d13a3b", "6db0943e", "322a961a"]`), nil),
 
 		mockOutputProcessor.EXPECT().
 			GenerateRandOutput(
 				[]any{"\xc5\xd1:;", "m\xb0\x94>", "2*\x96\x1a"},
-				helpers_test.TestRandAPIInfo(t, req.ID)).
+				testutils.TestRandAPIInfo(t, req.ID)).
 			Return(nil),
 	)
 
@@ -116,6 +116,9 @@ func TestBlobCommand_SuccessWithParams(t *testing.T) {
 		Timeout:         time.Second * 5,
 		RandRetriever:   mockRandRetriever,
 		OutputProcessor: mockOutputProcessor,
+		PregenRand: entities.PregenRand{
+			ID: testutils.Pointer("pregen"),
+		},
 	}
 
 	command := blob.NewBlobCommand(appConfig)
@@ -217,7 +220,7 @@ func TestBlobCommandOutputFailed(t *testing.T) {
 			Return(entities.RandomRequest{}, nil),
 		mockRandRetriever.EXPECT().
 			ExecuteRequest(gomock.Any(), gomock.Any()).
-			Return(helpers_test.TestRandResult(t, `["Ox8NH7tk4HM="]`), nil),
+			Return(testutils.TestRandResult(t, `["Ox8NH7tk4HM="]`), nil),
 		mockOutputProcessor.EXPECT().
 			GenerateRandOutput(gomock.Any(), gomock.Any()).
 			Return(entities.Error("test error")),

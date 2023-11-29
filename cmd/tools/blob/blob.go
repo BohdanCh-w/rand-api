@@ -122,7 +122,7 @@ func blob(cfg *config.AppConfig) cli.ActionFunc { // nolint: funlen
 			Size:       params.Size,
 			Number:     params.Number,
 			Format:     blobFormat(params.Hex),
-			PregenRand: nil,
+			PregenRand: cfg.PregenRand,
 		}
 
 		req, err := cfg.RandRetriever.NewRequest(method, blobReq)
@@ -171,11 +171,11 @@ func blob(cfg *config.AppConfig) cli.ActionFunc { // nolint: funlen
 }
 
 type blobRequest struct {
-	APIKey     string  `json:"apiKey"`
-	Size       int64   `json:"size"`
-	Number     int     `json:"n"`
-	Format     string  `json:"format"`
-	PregenRand *string `json:"pregeneratedRandomization"`
+	APIKey     string              `json:"apiKey"`
+	Size       int64               `json:"size"`
+	Number     int                 `json:"n"`
+	Format     string              `json:"format"`
+	PregenRand entities.PregenRand `json:"pregeneratedRandomization"`
 }
 
 type blobResponseData []string

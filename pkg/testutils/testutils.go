@@ -1,4 +1,4 @@
-package helpers_test
+package testutils
 
 import (
 	"encoding/json"
@@ -36,4 +36,8 @@ func TestRandAPIInfo(t *testing.T, id uuid.UUID) entities.APIInfo {
 		BitsLeft:     1477,
 		RequestsLeft: 233,
 	}
+}
+
+func Pointer[T any](v T) *T {
+	return &v
 }

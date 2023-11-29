@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/urfave/cli/v2"
 
-	helpers_test "github.com/bohdanch-w/rand-api/cmd/tools/helpers"
 	randuuid "github.com/bohdanch-w/rand-api/cmd/tools/uuid"
 	"github.com/bohdanch-w/rand-api/config"
 	"github.com/bohdanch-w/rand-api/entities"
+	"github.com/bohdanch-w/rand-api/pkg/testutils"
 	"github.com/bohdanch-w/rand-api/services/mock"
 )
 
@@ -48,12 +48,12 @@ func TestUuidCommand_SuccessNoParam(t *testing.T) {
 
 		mockRandRetriever.EXPECT().
 			ExecuteRequest(gomock.Any(), &req).
-			Return(helpers_test.TestRandResult(t, `["03e5a40e-c88d-4b2e-9714-adc581c9437f"]`), nil),
+			Return(testutils.TestRandResult(t, `["03e5a40e-c88d-4b2e-9714-adc581c9437f"]`), nil),
 
 		mockOutputProcessor.EXPECT().
 			GenerateRandOutput(
 				[]any{uuid.MustParse("03e5a40e-c88d-4b2e-9714-adc581c9437f")},
-				helpers_test.TestRandAPIInfo(t, req.ID)).
+				testutils.TestRandAPIInfo(t, req.ID)).
 			Return(nil),
 	)
 
@@ -104,7 +104,7 @@ func TestUuidCommand_SuccessWithParams(t *testing.T) { // nolint: funlen
 
 		mockRandRetriever.EXPECT().
 			ExecuteRequest(gomock.Any(), &req).
-			Return(helpers_test.TestRandResult(
+			Return(testutils.TestRandResult(
 				t, `["df428d4f-fd25-4984-ba6c-7557f6b1a853",`+
 					` "362097de-5ad9-4f28-ad8c-c5e0ee9c1915",`+
 					` "c07a3142-f816-474d-a9a3-0b4512f598ab"]`),
@@ -117,7 +117,7 @@ func TestUuidCommand_SuccessWithParams(t *testing.T) { // nolint: funlen
 					uuid.MustParse("362097de-5ad9-4f28-ad8c-c5e0ee9c1915"),
 					uuid.MustParse("c07a3142-f816-474d-a9a3-0b4512f598ab"),
 				},
-				helpers_test.TestRandAPIInfo(t, req.ID)).
+				testutils.TestRandAPIInfo(t, req.ID)).
 			Return(nil),
 	)
 
@@ -126,6 +126,9 @@ func TestUuidCommand_SuccessWithParams(t *testing.T) { // nolint: funlen
 		Timeout:         time.Second * 5,
 		RandRetriever:   mockRandRetriever,
 		OutputProcessor: mockOutputProcessor,
+		PregenRand: entities.PregenRand{
+			ID: testutils.Pointer("pregen"),
+		},
 	}
 
 	command := randuuid.NewUUIDCommand(appConfig)
@@ -211,7 +214,7 @@ func TestUuidCommandOutputFailed(t *testing.T) {
 			Return(entities.RandomRequest{}, nil),
 		mockRandRetriever.EXPECT().
 			ExecuteRequest(gomock.Any(), gomock.Any()).
-			Return(helpers_test.TestRandResult(t, `["03e5a40e-c88d-4b2e-9714-adc581c9437f"]`), nil),
+			Return(testutils.TestRandResult(t, `["03e5a40e-c88d-4b2e-9714-adc581c9437f"]`), nil),
 		mockOutputProcessor.EXPECT().
 			GenerateRandOutput(gomock.Any(), gomock.Any()).
 			Return(entities.Error("test error")),

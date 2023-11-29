@@ -72,7 +72,7 @@ func randUUID(cfg *config.AppConfig) cli.ActionFunc {
 		uuidReq := uuidRequest{
 			APIKey:     cfg.APIKey,
 			Number:     params.Number,
-			PregenRand: nil,
+			PregenRand: cfg.PregenRand,
 		}
 
 		req, err := cfg.RandRetriever.NewRequest(method, uuidReq)
@@ -114,9 +114,9 @@ func randUUID(cfg *config.AppConfig) cli.ActionFunc {
 }
 
 type uuidRequest struct {
-	APIKey     string  `json:"apiKey"`
-	Number     int     `json:"n"`
-	PregenRand *string `json:"pregeneratedRandomization"`
+	APIKey     string              `json:"apiKey"`
+	Number     int                 `json:"n"`
+	PregenRand entities.PregenRand `json:"pregeneratedRandomization"`
 }
 
 type uuidResponseData []uuid.UUID

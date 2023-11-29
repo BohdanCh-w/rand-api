@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/urfave/cli/v2"
 
-	helpers_test "github.com/bohdanch-w/rand-api/cmd/tools/helpers"
 	"github.com/bohdanch-w/rand-api/cmd/tools/integer"
 	"github.com/bohdanch-w/rand-api/config"
 	"github.com/bohdanch-w/rand-api/entities"
+	"github.com/bohdanch-w/rand-api/pkg/testutils"
 	"github.com/bohdanch-w/rand-api/services/mock"
 )
 
@@ -48,10 +48,10 @@ func TestIntegerCommand_SuccessNoParam(t *testing.T) {
 
 		mockRandRetriever.EXPECT().
 			ExecuteRequest(gomock.Any(), &req).
-			Return(helpers_test.TestRandResult(t, "[15]"), nil),
+			Return(testutils.TestRandResult(t, "[15]"), nil),
 
 		mockOutputProcessor.EXPECT().
-			GenerateRandOutput([]any{15}, helpers_test.TestRandAPIInfo(t, req.ID)).
+			GenerateRandOutput([]any{15}, testutils.TestRandAPIInfo(t, req.ID)).
 			Return(nil),
 	)
 
@@ -102,10 +102,10 @@ func TestIntegerCommand_SuccessWithParams(t *testing.T) {
 
 		mockRandRetriever.EXPECT().
 			ExecuteRequest(gomock.Any(), &req).
-			Return(helpers_test.TestRandResult(t, "[14, 34, -3]"), nil),
+			Return(testutils.TestRandResult(t, "[14, 34, -3]"), nil),
 
 		mockOutputProcessor.EXPECT().
-			GenerateRandOutput([]any{14, 34, -3}, helpers_test.TestRandAPIInfo(t, req.ID)).
+			GenerateRandOutput([]any{14, 34, -3}, testutils.TestRandAPIInfo(t, req.ID)).
 			Return(nil),
 	)
 
@@ -114,6 +114,9 @@ func TestIntegerCommand_SuccessWithParams(t *testing.T) {
 		Timeout:         time.Second * 5,
 		RandRetriever:   mockRandRetriever,
 		OutputProcessor: mockOutputProcessor,
+		PregenRand: entities.PregenRand{
+			ID: testutils.Pointer("pregen"),
+		},
 	}
 
 	command := integer.NewIntegerCommand(appConfig)
@@ -215,7 +218,7 @@ func TestIntegerCommandOutputFailed(t *testing.T) {
 			Return(entities.RandomRequest{}, nil),
 		mockRandRetriever.EXPECT().
 			ExecuteRequest(gomock.Any(), gomock.Any()).
-			Return(helpers_test.TestRandResult(t, "[0]"), nil),
+			Return(testutils.TestRandResult(t, "[0]"), nil),
 		mockOutputProcessor.EXPECT().
 			GenerateRandOutput(gomock.Any(), gomock.Any()).
 			Return(entities.Error("test error")),

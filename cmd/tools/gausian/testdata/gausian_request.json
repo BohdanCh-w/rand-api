@@ -4,5 +4,5 @@
     "mean": 3.14,
     "standardDeviation": 2.46,
     "significantDigits": 9,
-    "pregeneratedRandomization": null
+    "pregeneratedRandomization": "pregen"
 }

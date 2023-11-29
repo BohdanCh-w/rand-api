@@ -19,6 +19,7 @@ import (
 	"github.com/bohdanch-w/rand-api/cmd/tools/uuid"
 	"github.com/bohdanch-w/rand-api/cmd/tools/version"
 	"github.com/bohdanch-w/rand-api/config"
+	"github.com/bohdanch-w/rand-api/entities"
 	"github.com/bohdanch-w/rand-api/output"
 	"github.com/bohdanch-w/rand-api/randapi"
 
@@ -30,15 +31,17 @@ import (
 var apiKeyResource embed.FS
 
 const (
-	CommandName    = "randapi"
-	apiPathParam   = "api-path"
-	apikeyParam    = "apikey"
-	signedParam    = "signed"
-	verboseParam   = "verbose"
-	quietParam     = "quiet"
-	timeoutParam   = "timeout"
-	separatorParam = "separator"
-	outputParam    = "file"
+	CommandName     = "randapi"
+	apiPathParam    = "api-path"
+	apikeyParam     = "apikey"
+	pregenIDParam   = "pr-id"
+	pregenDateParam = "pr-date"
+	signedParam     = "signed"
+	verboseParam    = "verbose"
+	quietParam      = "quiet"
+	timeoutParam    = "timeout"
+	separatorParam  = "separator"
+	outputParam     = "file"
 
 	defaultTimeout     = 5 * time.Second
 	defaultSeparator   = " "
@@ -47,12 +50,38 @@ const (
 
 func retriveParamsFunc(cfg *config.AppConfig, f **os.File) cli.BeforeFunc {
 	return func(c *cli.Context) error {
+		const (
+			errInvalidDate         = entities.Error("latest allowed date is today")
+			errBothPregenSpecified = entities.Error("only pr-id OR pr-date is allowed. Not both")
+		)
+
 		if apiKey := c.String(apikeyParam); len(apiKey) != 0 {
 			if _, err := guuid.Parse(apiKey); err != nil {
 				return fmt.Errorf("api-key: %w", err)
 			}
 
 			cfg.APIKey = apiKey
+		}
+
+		if prDate := c.String(pregenDateParam); len(prDate) > 0 {
+			d, err := time.Parse("2006-01-02", prDate)
+			if err != nil {
+				return fmt.Errorf("invlid date format: %w", err)
+			}
+
+			if d.After(time.Now().UTC()) {
+				return errInvalidDate
+			}
+
+			cfg.PregenRand.Date = &prDate
+		}
+
+		if prID := c.String(pregenIDParam); len(prID) > 0 {
+			cfg.PregenRand.ID = &prID
+		}
+
+		if cfg.PregenRand.ID != nil && cfg.PregenRand.Date != nil {
+			return errBothPregenSpecified
 		}
 
 		cfg.Timeout = c.Duration(timeoutParam)
@@ -123,10 +152,18 @@ func main() { // nolint: funlen
 				DefaultText: "embedded resource",
 				Required:    apiKeyRequired,
 			},
+			&cli.StringFlag{
+				Name:  pregenIDParam,
+				Usage: "pregenerated randomization by id string",
+			},
+			&cli.StringFlag{
+				Name:  pregenDateParam,
+				Usage: "pregenerated randomization by date",
+			},
 			&cli.BoolFlag{
 				Name:    verboseParam,
 				Aliases: []string{"v"},
-				Usage:   "make verbose output after completition",
+				Usage:   "make verbose output after completion",
 			},
 			&cli.BoolFlag{
 				Name:    quietParam,
@@ -148,7 +185,7 @@ func main() { // nolint: funlen
 			&cli.StringFlag{
 				Name:    outputParam,
 				Aliases: []string{"o"},
-				Usage:   "save output to specied file",
+				Usage:   "save output to specified file",
 			},
 		},
 		Before: retriveParamsFunc(&cfg, &f),

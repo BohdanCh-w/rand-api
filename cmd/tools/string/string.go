@@ -138,7 +138,7 @@ func randString(cfg *config.AppConfig) cli.ActionFunc {
 			Characters:  params.Charset,
 			Number:      params.Number,
 			Replacement: !params.Unique,
-			PregenRand:  nil,
+			PregenRand:  cfg.PregenRand,
 		}
 
 		req, err := cfg.RandRetriever.NewRequest(method, strReq)
@@ -180,12 +180,12 @@ func randString(cfg *config.AppConfig) cli.ActionFunc {
 }
 
 type stringRequest struct {
-	APIKey      string  `json:"apiKey"`
-	Length      int     `json:"length"`
-	Characters  string  `json:"characters"`
-	Number      int     `json:"n"`
-	Replacement bool    `json:"replacement"`
-	PregenRand  *string `json:"pregeneratedRandomization"`
+	APIKey      string              `json:"apiKey"`
+	Length      int                 `json:"length"`
+	Characters  string              `json:"characters"`
+	Number      int                 `json:"n"`
+	Replacement bool                `json:"replacement"`
+	PregenRand  entities.PregenRand `json:"pregeneratedRandomization"`
 }
 
 type stringResponseData []string

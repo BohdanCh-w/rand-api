@@ -124,7 +124,7 @@ func randDecimal(cfg *config.AppConfig) cli.ActionFunc {
 			Number:        params.Number,
 			DecimalPlaces: params.Places,
 			Replacement:   !params.Unique,
-			PregenRand:    nil,
+			PregenRand:    cfg.PregenRand,
 		}
 
 		req, err := cfg.RandRetriever.NewRequest(method, decReq)
@@ -170,11 +170,11 @@ func randDecimal(cfg *config.AppConfig) cli.ActionFunc {
 }
 
 type decimalRequest struct {
-	APIKey        string  `json:"apiKey"`
-	Number        int     `json:"n"`
-	DecimalPlaces int     `json:"decimalPlaces"`
-	Replacement   bool    `json:"replacement"`
-	PregenRand    *string `json:"pregeneratedRandomization"`
+	APIKey        string              `json:"apiKey"`
+	Number        int                 `json:"n"`
+	DecimalPlaces int                 `json:"decimalPlaces"`
+	Replacement   bool                `json:"replacement"`
+	PregenRand    entities.PregenRand `json:"pregeneratedRandomization"`
 }
 
 type decimalResponseData []float64
