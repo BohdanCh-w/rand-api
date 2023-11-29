@@ -77,7 +77,7 @@ func (p *stringParams) retriveParams(ctx *cli.Context) error {
 	p.Number = ctx.Int(numberParam)
 	p.Unique = ctx.Bool(uniqueParam)
 
-	p.Charset = string(hashset.New([]rune(p.Charset)...).Values())
+	p.Charset = string(hashset.New([]rune(charset(p.Charset))...).Values())
 
 	return p.validate()
 }
@@ -189,3 +189,26 @@ type stringRequest struct {
 }
 
 type stringResponseData []string
+
+func charset(s string) string {
+	switch s {
+	case "":
+		return defaultCharacterRange
+	case "lower":
+		return "abcdefghijklmnopqrstuvwxyz"
+	case "upper":
+		return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	case "alpha":
+		return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+	case "pass", "password":
+		return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_$%&@#,.-=+*!?"
+	case "numeric":
+		return "0123456789"
+	case "hex":
+		return "0123456789ABCDEF"
+	case "base64":
+		return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+	default:
+		return s
+	}
+}
