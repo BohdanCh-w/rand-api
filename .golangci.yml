@@ -30,7 +30,7 @@ linters:
     - maligned
     - scopelint
     - exhaustivestruct
-    
+
   # generics:
     - rowserrcheck
     - sqlclosecheck
@@ -46,3 +46,4 @@ linters:
     - gofumpt
     - goimports
     - nolintlint
+    - depguard

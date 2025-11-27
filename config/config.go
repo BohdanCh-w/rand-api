@@ -8,8 +8,6 @@ import (
 )
 
 type AppConfig struct {
-	Version string
-
 	APIKey     string
 	PregenRand entities.PregenRand
 	Timeout    time.Duration

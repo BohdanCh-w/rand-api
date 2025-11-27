@@ -1,7 +1,6 @@
 package main
 
 import (
-	"embed"
 	"fmt"
 	"io"
 	"log"
@@ -20,15 +19,13 @@ import (
 	"github.com/bohdanch-w/rand-api/cmd/tools/version"
 	"github.com/bohdanch-w/rand-api/config"
 	"github.com/bohdanch-w/rand-api/entities"
+	"github.com/bohdanch-w/rand-api/internal/build"
 	"github.com/bohdanch-w/rand-api/output"
 	"github.com/bohdanch-w/rand-api/randapi"
 
 	guuid "github.com/google/uuid"
 	"github.com/urfave/cli/v2"
 )
-
-//go:embed resources/*
-var apiKeyResource embed.FS
 
 const (
 	CommandName     = "randapi"
@@ -48,7 +45,7 @@ const (
 	defaultRandAPIPath = "https://api.random.org/json-rpc/4/invoke"
 )
 
-func retriveParamsFunc(cfg *config.AppConfig, f **os.File) cli.BeforeFunc {
+func retriveParamsFunc(cfg *config.AppConfig, f **os.File) cli.BeforeFunc { // nolint: funlen
 	return func(c *cli.Context) error {
 		const (
 			errInvalidDate         = entities.Error("latest allowed date is today")
@@ -66,7 +63,7 @@ func retriveParamsFunc(cfg *config.AppConfig, f **os.File) cli.BeforeFunc {
 		if prDate := c.String(pregenDateParam); len(prDate) > 0 {
 			d, err := time.Parse("2006-01-02", prDate)
 			if err != nil {
-				return fmt.Errorf("invlid date format: %w", err)
+				return fmt.Errorf("invalid date format: %w", err)
 			}
 
 			if d.After(time.Now().UTC()) {
@@ -119,17 +116,12 @@ func retriveParamsFunc(cfg *config.AppConfig, f **os.File) cli.BeforeFunc {
 
 func main() { // nolint: funlen
 	var (
-		apiKeyRequired = true
-		cfg            config.AppConfig
-		apiKeyData, _  = apiKeyResource.ReadFile("resources/api-key")
-		versionData, _ = apiKeyResource.ReadFile("resources/version")
-		f              *os.File
+		cfg config.AppConfig
+		f   *os.File
 	)
 
-	if len(apiKeyData) > 0 {
-		cfg.APIKey = string(apiKeyData)
-		cfg.Version = string(versionData)
-		apiKeyRequired = false
+	if len(build.APIKey) > 0 {
+		cfg.APIKey = string(build.APIKey)
 	}
 
 	app := &cli.App{
@@ -150,7 +142,6 @@ func main() { // nolint: funlen
 				Name:        apikeyParam,
 				Usage:       "specify custom apikey",
 				DefaultText: "embedded resource",
-				Required:    apiKeyRequired,
 			},
 			&cli.StringFlag{
 				Name:  pregenIDParam,
@@ -198,7 +189,7 @@ func main() { // nolint: funlen
 			uuid.NewUUIDCommand(&cfg),
 			blob.NewBlobCommand(&cfg),
 			status.NewStatusCommand(&cfg),
-			version.NewVersionCommand(&cfg),
+			version.NewVersionCommand(),
 		},
 	}
 

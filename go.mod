@@ -1,6 +1,6 @@
 module github.com/bohdanch-w/rand-api
 
-go 1.21
+go 1.25
 
 require (
 	github.com/bohdanch-w/datatypes v0.1.0
